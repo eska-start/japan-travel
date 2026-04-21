@@ -340,8 +340,10 @@ window.openEditModal = (type, stayId = null) => {
         body.innerHTML = `
             <h4 style="color: var(--primary);">출국편</h4>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                <input type="text" id="edit-out-deptCode" value="${out.deptCode}" placeholder="출발지 코드">
-                <input type="text" id="edit-out-arrCode" value="${out.arrCode}" placeholder="도착지 코드">
+                <input type="text" id="edit-out-deptCode" value="${out.deptCode}" placeholder="출발 코드 (예: ICN)">
+                <input type="text" id="edit-out-deptName" value="${out.deptName}" placeholder="출발 공항명 (예: 인천)">
+                <input type="text" id="edit-out-arrCode" value="${out.arrCode}" placeholder="도착 코드 (예: KIX)">
+                <input type="text" id="edit-out-arrName" value="${out.arrName}" placeholder="도착 공항명 (예: 간사이)">
                 <input type="text" id="edit-out-flightNo" value="${out.flightNo}" placeholder="편명">
                 <input type="text" id="edit-out-date" value="${out.date}" placeholder="날짜">
                 <input type="text" id="edit-out-deptTime" value="${out.deptTime}" placeholder="출발 시간">
@@ -350,8 +352,10 @@ window.openEditModal = (type, stayId = null) => {
             </div>
             <h4 style="color: #3498db;">귀국편</h4>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <input type="text" id="edit-ret-deptCode" value="${ret.deptCode}" placeholder="출발지 코드">
-                <input type="text" id="edit-ret-arrCode" value="${ret.arrCode}" placeholder="도착지 코드">
+                <input type="text" id="edit-ret-deptCode" value="${ret.deptCode}" placeholder="출발 코드">
+                <input type="text" id="edit-ret-deptName" value="${ret.deptName}" placeholder="출발 공항명">
+                <input type="text" id="edit-ret-arrCode" value="${ret.arrCode}" placeholder="도착 코드">
+                <input type="text" id="edit-ret-arrName" value="${ret.arrName}" placeholder="도착 공항명">
                 <input type="text" id="edit-ret-flightNo" value="${ret.flightNo}" placeholder="편명">
                 <input type="text" id="edit-ret-date" value="${ret.date}" placeholder="날짜">
                 <input type="text" id="edit-ret-deptTime" value="${ret.deptTime}" placeholder="출발 시간">
@@ -395,7 +399,9 @@ window.saveEdit = () => {
         // 기간 계산 로직 생략 (기존 필드 유지)
     } else if (currentEditType === 'flight') {
         appState.flight.outbound.deptCode = document.getElementById('edit-out-deptCode').value;
+        appState.flight.outbound.deptName = document.getElementById('edit-out-deptName').value;
         appState.flight.outbound.arrCode = document.getElementById('edit-out-arrCode').value;
+        appState.flight.outbound.arrName = document.getElementById('edit-out-arrName').value;
         appState.flight.outbound.flightNo = document.getElementById('edit-out-flightNo').value;
         appState.flight.outbound.date = document.getElementById('edit-out-date').value;
         appState.flight.outbound.deptTime = document.getElementById('edit-out-deptTime').value;
@@ -403,7 +409,9 @@ window.saveEdit = () => {
         appState.flight.outbound.gate = document.getElementById('edit-out-gate').value;
         
         appState.flight.return.deptCode = document.getElementById('edit-ret-deptCode').value;
+        appState.flight.return.deptName = document.getElementById('edit-ret-deptName').value;
         appState.flight.return.arrCode = document.getElementById('edit-ret-arrCode').value;
+        appState.flight.return.arrName = document.getElementById('edit-ret-arrName').value;
         appState.flight.return.flightNo = document.getElementById('edit-ret-flightNo').value;
         appState.flight.return.date = document.getElementById('edit-ret-date').value;
         appState.flight.return.deptTime = document.getElementById('edit-ret-deptTime').value;
