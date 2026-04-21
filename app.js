@@ -20,40 +20,31 @@ const db = getDatabase(app);
 const defaultState = {
     tripTag: 'OSAKA & KYOTO 2024',
     tripTitle: '오사카 & 교토 힐링 여행',
-    tripStartDate: '2024-10-15',
-    tripEndDate: '2024-10-22',
-    tripDateRange: '2024.10.15 - 2024.10.22 (7박 8일)',
+    tripStartDate: '',
+    tripEndDate: '',
+    tripDateRange: '날짜를 설정해 주세요',
     flight: {
         deptCode: 'ICN', deptName: '인천 국제공항', deptTime: '10:30 AM',
         arrCode: 'KIX', arrName: '간사이 국제공항', arrTime: '12:40 PM',
-        flightNo: 'OZ112', duration: '2h 10m', gate: '제1터미널 25번 게이트',
+        flightNo: 'OZ112', duration: '2h 10m', gate: '게이트 정보',
         date: '2024년 10월 15일 (화)'
     },
     rental: {
         pickTime: '10/16 09:00 AM', returnPlace: '교토역 앞 토요타 렌터카', carInfo: '토요타 야리스 (소형)'
     },
-    stays: [
-        {
-            id: 'initial-stay',
-            name: '온야도 노노 교토시치조',
-            address: '491 Zaimokucho, Shimogyo Ward, Kyoto',
-            days: 'Day 1 - Day 3',
-            checkInDate: '2024-10-15', checkInTime: '15:00',
-            checkOutDate: '2024-10-18', checkOutTime: '11:00',
-            subItems: [
-                { time: '13:30', desc: '하루카 특급 열차 탑승' },
-                { time: '16:00', desc: '니시키 시장 구경' }
-            ]
-        }
-    ]
+    stays: []
 };
 
-const getTripId = () => window.location.hash.substring(1) || 'default-trip';
-const tripRef = ref(db, 'trips/' + getTripId());
+// --- State Management ---
+const getTripId = () => {
+    const hash = window.location.hash.substring(1);
+    return hash ? decodeURIComponent(hash) : 'default-trip';
+};
 
 let appState = { ...defaultState };
 let currentEditType = null;
 let currentStayId = null;
+let isUpdatingFromServer = false;
 
 // --- Sync Status Handler ---
 function updateSyncStatus(status, color) {
@@ -200,16 +191,24 @@ window.openEditModal = (type, stayId = null) => {
     if (type === 'title') {
         title.innerText = '여행 제목 및 일정 수정';
         body.innerHTML = `
-            <label class="label">상단 태그 (영문)</label><input type="text" id="edit-tripTag" value="${appState.tripTag || ''}">
-            <label class="label">여행 제목</label><input type="text" id="edit-tripTitle" value="${appState.tripTitle || ''}">
+            <label class="label">상단 태그 (영문)</label>
+            <input type="text" id="edit-tripTag" value="${appState.tripTag || ''}">
+            <label class="label">여행 제목</label>
+            <input type="text" id="edit-tripTitle" value="${appState.tripTitle || ''}">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div><label class="label">시작 날짜 (달력)</label><input type="date" id="edit-tripStartDate" value="${appState.tripStartDate || ''}"></div>
-                <div><label class="label">종료 날짜 (달력)</label><input type="date" id="edit-tripEndDate" value="${appState.tripEndDate || ''}"></div>
+                <div>
+                    <label class="label">시작 날짜 (달력)</label>
+                    <input type="date" id="edit-tripStartDate" value="${appState.tripStartDate || ''}">
+                </div>
+                <div>
+                    <label class="label">종료 날짜 (달력)</label>
+                    <input type="date" id="edit-tripEndDate" value="${appState.tripEndDate || ''}">
+                </div>
             </div>
         `;
     } else if (type === 'flight') {
         title.innerText = '항공편 정보 수정';
-        const f = appState.flight || {};
+        const f = appState.flight || defaultState.flight;
         body.innerHTML = `
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div><label class="label">출발지 (코드)</label><input type="text" id="edit-deptCode" value="${f.deptCode || ''}"></div>
@@ -225,7 +224,7 @@ window.openEditModal = (type, stayId = null) => {
         `;
     } else if (type === 'rental') {
         title.innerText = '렌트카 정보 수정';
-        const r = appState.rental || {};
+        const r = appState.rental || defaultState.rental;
         body.innerHTML = `
             <label class="label">빌리는 시간</label><input type="text" id="edit-pickTime" value="${r.pickTime || ''}">
             <label class="label">반납 장소</label><input type="text" id="edit-returnPlace" value="${r.returnPlace || ''}">
@@ -258,7 +257,7 @@ function calculateDuration(start, end) {
     const d2 = new Date(end);
     const diff = d2.getTime() - d1.getTime();
     const nights = Math.ceil(diff / (1000 * 60 * 60 * 24));
-    if (nights < 0) return '';
+    if (nights < 0) return '기간 설정 오류';
     return `${start.replace(/-/g, '.')} - ${end.replace(/-/g, '.')} (${nights}박 ${nights + 1}일)`;
 }
 
@@ -378,6 +377,8 @@ async function updateExchangeRate() {
 // --- Firebase Sync ---
 
 function saveToFirebase() {
+    const tripId = getTripId();
+    const tripRef = ref(db, 'trips/' + tripId);
     set(tripRef, appState).then(() => {
         updateSyncStatus("클라우드 저장됨", "#2ecc71");
         setTimeout(() => updateSyncStatus("연결됨", "#2ecc71"), 3000);
@@ -388,6 +389,9 @@ function saveToFirebase() {
 }
 
 function loadFromFirebase() {
+    const tripId = getTripId();
+    const tripRef = ref(db, 'trips/' + tripId);
+
     // Connection monitoring
     const connectedRef = ref(db, ".info/connected");
     onValue(connectedRef, (snap) => {
@@ -398,14 +402,19 @@ function loadFromFirebase() {
         }
     });
 
+    // Real-time data listener
     onValue(tripRef, (snapshot) => {
         const data = snapshot.val();
         if (data) {
+            // Keep local changes if user is currently editing? 
+            // For now, simpler real-time sync (always overwrite)
             appState = { ...defaultState, ...data };
+            if(!appState.stays) appState.stays = [];
             renderAll();
             updateSyncStatus("최신 데이터 수신", "#2ecc71");
             setTimeout(() => updateSyncStatus("연결됨", "#2ecc71"), 2000);
         } else {
+            // If new trip ID, save default state to Firebase
             saveToFirebase();
         }
     });
