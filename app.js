@@ -1,21 +1,35 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+// --- Firebase Configuration ---
+const firebaseConfig = {
+    apiKey: "AIzaSyCvPZsh-90NF_eXJQt_VJj0XfqeI9RsklE",
+    authDomain: "travel-fbb26.firebaseapp.com",
+    projectId: "travel-fbb26",
+    storageBucket: "travel-fbb26.firebasestorage.app",
+    messagingSenderId: "182068561482",
+    appId: "1:182068561482:web:387bb1fe527381462588b3",
+    measurementId: "G-81GHFH9Z2E"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
 // --- State Management ---
+// Determine Trip ID from URL hash (e.g., #my-trip)
+const getTripId = () => window.location.hash.substring(1) || 'default-trip';
+const tripRef = ref(db, 'trips/' + getTripId());
+
 let appState = {
     flight: {
-        deptCode: 'ICN',
-        deptName: '인천 국제공항',
-        deptTime: '10:30 AM',
-        arrCode: 'KIX',
-        arrName: '간사이 국제공항',
-        arrTime: '12:40 PM',
-        flightNo: 'OZ112',
-        duration: '2h 10m',
-        gate: '제1터미널 25번 게이트',
+        deptCode: 'ICN', deptName: '인천 국제공항', deptTime: '10:30 AM',
+        arrCode: 'KIX', arrName: '간사이 국제공항', arrTime: '12:40 PM',
+        flightNo: 'OZ112', duration: '2h 10m', gate: '제1터미널 25번 게이트',
         date: '2024년 10월 15일 (화)'
     },
     rental: {
-        pickTime: '10/16 09:00 AM',
-        returnPlace: '교토역 앞 토요타 렌터카',
-        carInfo: '토요타 야리스 (소형)'
+        pickTime: '10/16 09:00 AM', returnPlace: '교토역 앞 토요타 렌터카', carInfo: '토요타 야리스 (소형)'
     },
     stays: [
         {
@@ -23,10 +37,8 @@ let appState = {
             name: '온야도 노노 교토시치조',
             address: '491 Zaimokucho, Shimogyo Ward, Kyoto',
             days: 'Day 1 - Day 3',
-            checkInDate: '2024-10-15',
-            checkInTime: '15:00',
-            checkOutDate: '2024-10-18',
-            checkOutTime: '11:00',
+            checkInDate: '2024-10-15', checkInTime: '15:00',
+            checkOutDate: '2024-10-18', checkOutTime: '11:00',
             subItems: [
                 { time: '13:30', desc: '하루카 특급 열차 탑승' },
                 { time: '16:00', desc: '니시키 시장 구경' }
@@ -49,6 +61,7 @@ function renderAll() {
 function renderFlight() {
     const f = appState.flight;
     const container = document.getElementById('flight-display');
+    if(!container) return;
     container.innerHTML = `
         <div class="flight-info">
             <div class="departure">
@@ -83,6 +96,7 @@ function renderFlight() {
 function renderRental() {
     const r = appState.rental;
     const container = document.getElementById('rental-display');
+    if(!container) return;
     container.innerHTML = `
         <div class="info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
             <div class="info-item">
@@ -103,6 +117,7 @@ function renderRental() {
 
 function renderStays() {
     const container = document.getElementById('stay-container');
+    if(!container) return;
     container.innerHTML = appState.stays.map(stay => `
         <div class="card" id="stay-${stay.id}">
             <div class="flex-between">
@@ -130,7 +145,7 @@ function renderStays() {
             </div>
 
             <div class="sub-itinerary-list" id="sub-list-${stay.id}">
-                ${stay.subItems.map(item => `
+                ${(stay.subItems || []).map(item => `
                     <div class="sub-item">
                         <div>
                             <span style="font-weight: 700; margin-right: 10px;">${item.time}</span>
@@ -147,7 +162,7 @@ function renderStays() {
 
 // --- Modal Functions ---
 
-function openEditModal(type, stayId = null) {
+window.openEditModal = (type, stayId = null) => {
     currentEditType = type;
     currentStayId = stayId;
     const modal = document.getElementById('editModal');
@@ -197,11 +212,11 @@ function openEditModal(type, stayId = null) {
     }
 }
 
-function closeEditModal() {
+window.closeEditModal = () => {
     document.getElementById('editModal').style.display = 'none';
 }
 
-function saveEdit() {
+window.saveEdit = () => {
     if (currentEditType === 'flight') {
         appState.flight = {
             deptCode: document.getElementById('edit-deptCode').value,
@@ -212,8 +227,7 @@ function saveEdit() {
             arrTime: document.getElementById('edit-arrTime').value,
             flightNo: document.getElementById('edit-flightNo').value,
             date: document.getElementById('edit-date').value,
-            duration: '계산됨',
-            gate: '게이트 정보'
+            duration: appState.flight.duration, gate: appState.flight.gate
         };
     } else if (currentEditType === 'rental') {
         appState.rental = {
@@ -233,69 +247,55 @@ function saveEdit() {
         };
 
         if (currentStayId) {
-            // Update existing
             const index = appState.stays.findIndex(s => s.id == currentStayId);
-            if (index !== -1) {
-                appState.stays[index] = { ...appState.stays[index], ...stayData };
-            }
+            if (index !== -1) appState.stays[index] = { ...appState.stays[index], ...stayData };
         } else {
-            // Add new
-            const newStay = {
-                id: String(Date.now()),
-                ...stayData,
-                subItems: []
-            };
-            if(newStay.name) appState.stays.push(newStay);
+            appState.stays.push({ id: String(Date.now()), ...stayData, subItems: [] });
         }
     }
 
-    renderAll();
-    saveToLocal();
+    saveToFirebase();
     closeEditModal();
 }
 
 // --- Sub Itinerary Logic ---
 
-function openAddSubModal(stayId) {
+window.openAddSubModal = (stayId) => {
     currentStayId = stayId;
     document.getElementById('addSubModal').style.display = 'flex';
 }
 
-function closeSubModal() {
+window.closeSubModal = () => {
     document.getElementById('addSubModal').style.display = 'none';
     document.getElementById('itemTime').value = '';
     document.getElementById('itemDesc').value = '';
 }
 
-function addItineraryItem() {
+window.addItineraryItem = () => {
     const time = document.getElementById('itemTime').value;
     const desc = document.getElementById('itemDesc').value;
-
     if (!time || !desc) return;
-
-    const stay = appState.stays.find(s => s.id === currentStayId);
+    const stay = appState.stays.find(s => s.id == currentStayId);
     if (stay) {
+        if(!stay.subItems) stay.subItems = [];
         stay.subItems.push({ time, desc });
-        renderStays();
-        saveToLocal();
+        saveToFirebase();
     }
     closeSubModal();
 }
 
-function deleteSubItem(stayId, time, desc) {
+window.deleteSubItem = (stayId, time, desc) => {
     const stay = appState.stays.find(s => s.id == stayId);
     if (stay) {
         stay.subItems = stay.subItems.filter(item => !(item.time === time && item.desc === desc));
-        renderStays();
-        saveToLocal();
+        saveToFirebase();
     }
 }
 
-function deleteStay(stayId) {
+window.deleteStay = (stayId) => {
     if(confirm('이 숙소와 관련된 모든 일정을 삭제하시겠습니까?')) {
         appState.stays = appState.stays.filter(s => s.id != stayId);
-        renderStays();
-        saveToLocal();
+        saveToFirebase();
     }
 }
 
@@ -304,58 +304,56 @@ function deleteStay(stayId) {
 async function updateExchangeRate() {
     const rateEl = document.getElementById('exchange-rate');
     const updateEl = document.getElementById('last-update');
-    
     try {
         const response = await fetch('https://open.er-api.com/v6/latest/JPY');
         const data = await response.json();
         const krwRate = data.rates.KRW;
-        
         rateEl.innerHTML = `100 JPY = <span style="color: var(--primary);">${(krwRate * 100).toFixed(2)}</span> KRW`;
         updateEl.innerText = `마지막 업데이트: ${new Date().toLocaleTimeString()}`;
     } catch (error) {
-        console.error('환율 정보를 가져오는데 실패했습니다:', error);
-        rateEl.innerText = '환율 정보를 불러올 수 없습니다.';
+        rateEl.innerText = '환율 정보 로드 실패';
     }
+}
+
+// --- Firebase Sync ---
+
+function saveToFirebase() {
+    set(tripRef, appState);
+}
+
+function loadFromFirebase() {
+    onValue(tripRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            appState = data;
+            if(!appState.stays) appState.stays = [];
+            renderAll();
+        } else {
+            // Initial save if no data exists
+            saveToFirebase();
+        }
+    });
 }
 
 // --- Helper Functions ---
 
-function handleCheckInChange(checkInDate) {
+window.handleCheckInChange = (checkInDate) => {
     const checkOutInput = document.getElementById('edit-stayCheckOutDate');
-    if (!checkInDate) return;
-
+    if (!checkInDate || !checkOutInput) return;
     const date = new Date(checkInDate);
     date.setDate(date.getDate() + 1);
     const minDate = date.toISOString().split('T')[0];
-    
     checkOutInput.min = minDate;
-    
-    // If current check-out is earlier than check-in + 1, update it
     if (!checkOutInput.value || checkOutInput.value < minDate) {
         checkOutInput.value = minDate;
     }
 }
 
-// --- Persistence ---
-
-function saveToLocal() {
-    localStorage.setItem('japanTripState', JSON.stringify(appState));
-}
-
-function loadFromLocal() {
-    const saved = localStorage.getItem('japanTripState');
-    if (saved) {
-        appState = JSON.parse(saved);
-    }
-    renderAll();
-}
-
 // --- Initialization ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    loadFromLocal();
+    loadFromFirebase();
     updateExchangeRate();
-    // 1시간마다 환율 업데이트
     setInterval(updateExchangeRate, 3600000);
 });
 
@@ -365,3 +363,8 @@ window.onclick = function(event) {
         closeSubModal();
     }
 }
+
+// Sync on Hash Change
+window.onhashchange = () => {
+    window.location.reload();
+};
