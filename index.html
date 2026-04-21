@@ -47,8 +47,8 @@
                         <span id="main-tag" class="tag" style="margin-bottom: 10px; display: inline-block;">TOKYO & KYOTO 2024</span>
                         <h1 id="main-title" style="margin: 0; line-height: 1.2;">오사카 & 교토 힐링 여행</h1>
                         <p id="main-date" style="margin-top: 15px; margin-bottom: 15px;"><i class="far fa-calendar"></i> 2024.10.15 - 2024.10.22 (7박 8일)</p>
-                        <button class="btn-map" style="margin-top: 0; width: auto; padding: 8px 15px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); font-size: 0.85rem;" onclick="openEditModal('title')">
-                            <i class="fas fa-edit"></i> 제목 및 기간 수정
+                        <button class="btn-map" style="margin-top: 0; width: 42px; height: 42px; padding: 0; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center;" onclick="openEditModal('title')">
+                            <i class="fas fa-edit" style="font-size: 1.1rem;"></i>
                         </button>
                     </div>
                 </div>
@@ -62,37 +62,52 @@
             </div>
 
             <!-- 항공편 섹션 -->
-            <section id="flights">
-                <div class="flex-between" style="margin-bottom: 1.5rem;">
+            <section id="flights" style="margin-bottom: 2rem;">
+                <div class="section-header" onclick="toggleSection('flights')">
                     <h2 class="section-title" style="margin-bottom: 0;"><i class="fas fa-plane-departure"></i> 항공편 정보</h2>
-                    <button class="btn-map" style="margin-top: 0; background: var(--text-sub);" onclick="openEditModal('flight')"><i class="fas fa-edit"></i> 수정</button>
+                    <i class="fas fa-chevron-down toggle-icon" id="flights-toggle-icon"></i>
                 </div>
-                <div id="flight-display" class="card flight-card">
-                    <!-- Dynamic Content -->
+                <div id="flights-content">
+                    <div style="text-align: right; margin-bottom: 1rem;">
+                        <button class="btn-map" style="margin-top: 0; display: inline-block; width: auto; padding: 8px 15px; background: var(--text-sub);" onclick="openEditModal('flight')"><i class="fas fa-edit"></i> 수정</button>
+                    </div>
+                    <div id="flight-display" class="card flight-card">
+                        <!-- Dynamic Content -->
+                    </div>
                 </div>
             </section>
 
             <!-- 렌트카 섹션 -->
-            <section id="rental">
-                <div class="flex-between" style="margin-bottom: 1.5rem;">
+            <section id="rental" style="margin-bottom: 2rem;">
+                <div class="section-header" onclick="toggleSection('rental')">
                     <h2 class="section-title" style="margin-bottom: 0;"><i class="fas fa-car"></i> 렌트카 예약</h2>
-                    <button class="btn-map" style="margin-top: 0; background: var(--text-sub);" onclick="openEditModal('rental')"><i class="fas fa-edit"></i> 수정</button>
+                    <i class="fas fa-chevron-down toggle-icon" id="rental-toggle-icon"></i>
                 </div>
-                <div id="rental-display" class="card">
-                    <!-- Dynamic Content -->
+                <div id="rental-content">
+                    <div style="text-align: right; margin-bottom: 1rem;">
+                        <button class="btn-map" style="margin-top: 0; display: inline-block; width: auto; padding: 8px 15px; background: var(--text-sub);" onclick="openEditModal('rental')"><i class="fas fa-edit"></i> 수정</button>
+                    </div>
+                    <div id="rental-display" class="card">
+                        <!-- Dynamic Content -->
+                    </div>
                 </div>
             </section>
 
             <!-- 숙소 & 세부 일정 섹션 -->
-            <section id="accommodation">
-                <div class="flex-between" style="margin-bottom: 1.5rem;">
+            <section id="accommodation" style="margin-bottom: 2rem;">
+                <div class="section-header" onclick="toggleSection('accommodation')">
                     <h2 class="section-title" style="margin-bottom: 0;"><i class="fas fa-hotel"></i> 숙소 관리</h2>
-                    <button class="btn-map" style="margin-top: 0;" onclick="openEditModal('stay')"><i class="fas fa-plus"></i> 숙소 추가</button>
+                    <i class="fas fa-chevron-down toggle-icon" id="accommodation-toggle-icon"></i>
                 </div>
-                
-                <div class="accommodation-container" id="stay-container">
-                    <!-- Dynamic Stays -->
+                <div id="accommodation-content">
+                    <div style="text-align: right; margin-bottom: 1rem;">
+                        <button class="btn-map" style="margin-top: 0; display: inline-block; width: auto; padding: 8px 15px;" onclick="openEditModal('stay')"><i class="fas fa-plus"></i> 숙소 추가</button>
+                    </div>
+                    <div class="accommodation-container" id="stay-container">
+                        <!-- Dynamic Stays -->
+                    </div>
                 </div>
+            </section>
 
                 <!-- 현재 여행 코드 표시 영역 -->
                 <div class="card" style="margin-top: 2rem; text-align: center; background: #f8f9fa; border: 1px dashed var(--primary);">

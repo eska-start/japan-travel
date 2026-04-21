@@ -113,6 +113,19 @@ document.addEventListener('keypress', (e) => {
     }
 });
 
+// --- UI Helpers ---
+window.toggleSection = (sectionId) => {
+    const content = document.getElementById(`${sectionId}-content`);
+    const icon = document.getElementById(`${sectionId}-toggle-icon`);
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.style.transform = 'rotate(0deg)';
+    } else {
+        content.style.display = 'none';
+        icon.style.transform = 'rotate(-90deg)';
+    }
+};
+
 // --- Sync Status Handler ---
 function updateSyncStatus(status, color) {
     const dot = document.getElementById('sync-dot');
