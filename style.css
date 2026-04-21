@@ -89,6 +89,19 @@ h1 {
     font-size: 2.8rem;
     margin: 1rem 0;
     letter-spacing: -1px;
+    word-break: keep-all;
+}
+
+.edit-trigger {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+
+.edit-trigger:hover {
+    transform: scale(1.1);
 }
 
 /* 섹션 및 카드 */

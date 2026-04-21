@@ -156,7 +156,9 @@ function renderAll() {
 function updateCurrentTripDisplay() {
     const tripId = getTripId();
     const sectionDisplay = document.getElementById('section-trip-id-display');
+    const sidebarDisplay = document.getElementById('current-trip-id');
     if (sectionDisplay) sectionDisplay.innerText = tripId;
+    if (sidebarDisplay) sidebarDisplay.innerText = `현재 접속 중: ${tripId}`;
 }
 
 function renderTitle() {
