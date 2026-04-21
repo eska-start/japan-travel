@@ -448,9 +448,22 @@ function loadFromFirebase() {
     });
 }
 
+// --- Connection Monitor ---
+function monitorConnection() {
+    const connectedRef = ref(db, ".info/connected");
+    onValue(connectedRef, (snap) => {
+        if (snap.val() === true) {
+            updateSyncStatus("실시간 동기화 중", "#2ecc71");
+        } else {
+            updateSyncStatus("연결 끊김 (재시도 중...)", "#e74c3c");
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     loadFromFirebase();
     fetchExchangeRate();
+    monitorConnection();
     setInterval(fetchExchangeRate, 1000 * 60 * 10); // 10분마다 업데이트
 });
 
