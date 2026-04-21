@@ -22,6 +22,7 @@ const getTripId = () => window.location.hash.substring(1) || 'default-trip';
 const tripRef = ref(db, 'trips/' + getTripId());
 
 let appState = {
+    tripTag: 'OSAKA & KYOTO 2024',
     tripTitle: '오사카 & 교토 힐링 여행',
     tripDateRange: '2024.10.15 - 2024.10.22 (7박 8일)',
     flight: {
@@ -62,8 +63,10 @@ function renderAll() {
 }
 
 function renderTitle() {
+    const tagEl = document.getElementById('main-tag');
     const titleEl = document.getElementById('main-title');
     const dateEl = document.getElementById('main-date');
+    if (tagEl) tagEl.innerText = appState.tripTag || 'TRAVEL';
     if (titleEl) titleEl.innerText = appState.tripTitle || '나의 일본 여행';
     if (dateEl) dateEl.innerHTML = `<i class="far fa-calendar"></i> ${appState.tripDateRange || '날짜를 설정해 주세요'}`;
 }
@@ -183,8 +186,9 @@ window.openEditModal = (type, stayId = null) => {
     body.innerHTML = '';
 
     if (type === 'title') {
-        title.innerText = '여행 제목 및 기간 수정';
+        title.innerText = '여행 제목 및 정보 수정';
         body.innerHTML = `
+            <label class="label">상단 태그 (영문 추천)</label><input type="text" id="edit-tripTag" value="${appState.tripTag || ''}" placeholder="예: TOKYO 2024">
             <label class="label">여행 제목</label><input type="text" id="edit-tripTitle" value="${appState.tripTitle || ''}" placeholder="예: 오사카 힐링 여행">
             <label class="label">여행 기간</label><input type="text" id="edit-tripDateRange" value="${appState.tripDateRange || ''}" placeholder="예: 2024.10.15 - 10.22">
         `;
@@ -234,6 +238,7 @@ window.closeEditModal = () => {
 
 window.saveEdit = () => {
     if (currentEditType === 'title') {
+        appState.tripTag = document.getElementById('edit-tripTag').value;
         appState.tripTitle = document.getElementById('edit-tripTitle').value;
         appState.tripDateRange = document.getElementById('edit-tripDateRange').value;
     } else if (currentEditType === 'flight') {
