@@ -168,11 +168,11 @@ function renderStays() {
     const container = document.getElementById('stay-container');
     if(!container) return;
 
-    // 날짜별 정렬 로직 추가
+    // 날짜별 정렬 (getTime 사용으로 모바일 호환성 강화)
     const sortedStays = [...(appState.stays || [])].sort((a, b) => {
         if (!a.checkInDate) return 1;
         if (!b.checkInDate) return -1;
-        return new Date(a.checkInDate) - new Date(b.checkInDate);
+        return new Date(a.checkInDate).getTime() - new Date(b.checkInDate).getTime();
     });
 
     container.innerHTML = sortedStays.map(stay => `
