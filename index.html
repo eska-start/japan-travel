@@ -28,6 +28,15 @@
                 <p id="exchange-rate" style="font-weight: 700; margin-top: 5px;">로딩 중...</p>
                 <p id="last-update" style="font-size: 0.6rem; color: var(--text-sub); margin-top: 5px;"></p>
             </div>
+
+            <div class="trip-selector" style="margin-top: 2rem; background: var(--bg); padding: 1rem; border-radius: 12px; border: 1px solid #eee;">
+                <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 10px;">여행 코드 입력 (공유용)</p>
+                <div style="display: flex; gap: 5px;">
+                    <input type="text" id="trip-id-input" placeholder="코드 입력" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.8rem;">
+                    <button onclick="joinTrip()" style="padding: 8px 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer;"><i class="fas fa-arrow-right"></i></button>
+                </div>
+                <p id="current-trip-id" style="font-size: 0.7rem; color: var(--primary); margin-top: 10px; font-weight: 600;"></p>
+            </div>
         </aside>
 
         <!-- 메인 콘텐츠 -->

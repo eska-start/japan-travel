@@ -44,7 +44,32 @@ const getTripId = () => {
 let appState = { ...defaultState };
 let currentEditType = null;
 let currentStayId = null;
-let isUpdatingFromServer = false;
+
+// --- Trip Selection Logic ---
+window.joinTrip = () => {
+    const input = document.getElementById('trip-id-input');
+    const tripId = input.value.trim();
+    if (tripId) {
+        window.location.hash = tripId;
+    } else {
+        alert("여행 코드를 입력해 주세요!");
+    }
+};
+
+// Enter key support for trip ID
+document.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && document.activeElement.id === 'trip-id-input') {
+        joinTrip();
+    }
+});
+
+function updateCurrentTripDisplay() {
+    const display = document.getElementById('current-trip-id');
+    if (display) {
+        const id = getTripId();
+        display.innerHTML = `<i class="fas fa-link"></i> 현재 코드: <strong>${id}</strong>`;
+    }
+}
 
 // --- Sync Status Handler ---
 function updateSyncStatus(status, color) {
@@ -63,6 +88,7 @@ function renderAll() {
     renderFlight();
     renderRental();
     renderStays();
+    updateCurrentTripDisplay();
 }
 
 function renderTitle() {
@@ -402,19 +428,15 @@ function loadFromFirebase() {
         }
     });
 
-    // Real-time data listener
     onValue(tripRef, (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            // Keep local changes if user is currently editing? 
-            // For now, simpler real-time sync (always overwrite)
             appState = { ...defaultState, ...data };
             if(!appState.stays) appState.stays = [];
             renderAll();
             updateSyncStatus("최신 데이터 수신", "#2ecc71");
             setTimeout(() => updateSyncStatus("연결됨", "#2ecc71"), 2000);
         } else {
-            // If new trip ID, save default state to Firebase
             saveToFirebase();
         }
     });
