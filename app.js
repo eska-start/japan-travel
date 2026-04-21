@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, set, onValue, update, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
@@ -54,6 +54,16 @@ const tripRef = ref(db, 'trips/' + getTripId());
 let appState = { ...defaultState };
 let currentEditType = null;
 let currentStayId = null;
+
+// --- Sync Status Handler ---
+function updateSyncStatus(status, color) {
+    const dot = document.getElementById('sync-dot');
+    const text = document.getElementById('sync-text');
+    if (dot && text) {
+        dot.style.background = color;
+        text.innerText = status;
+    }
+}
 
 // --- Rendering Functions ---
 
@@ -190,19 +200,11 @@ window.openEditModal = (type, stayId = null) => {
     if (type === 'title') {
         title.innerText = '여행 제목 및 일정 수정';
         body.innerHTML = `
-            <label class="label">상단 태그 (영문)</label>
-            <input type="text" id="edit-tripTag" value="${appState.tripTag || ''}">
-            <label class="label">여행 제목</label>
-            <input type="text" id="edit-tripTitle" value="${appState.tripTitle || ''}">
+            <label class="label">상단 태그 (영문)</label><input type="text" id="edit-tripTag" value="${appState.tripTag || ''}">
+            <label class="label">여행 제목</label><input type="text" id="edit-tripTitle" value="${appState.tripTitle || ''}">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div>
-                    <label class="label">시작 날짜 (달력)</label>
-                    <input type="date" id="edit-tripStartDate" value="${appState.tripStartDate || ''}">
-                </div>
-                <div>
-                    <label class="label">종료 날짜 (달력)</label>
-                    <input type="date" id="edit-tripEndDate" value="${appState.tripEndDate || ''}">
-                </div>
+                <div><label class="label">시작 날짜 (달력)</label><input type="date" id="edit-tripStartDate" value="${appState.tripStartDate || ''}"></div>
+                <div><label class="label">종료 날짜 (달력)</label><input type="date" id="edit-tripEndDate" value="${appState.tripEndDate || ''}"></div>
             </div>
         `;
     } else if (type === 'flight') {
@@ -262,6 +264,7 @@ function calculateDuration(start, end) {
 
 window.saveEdit = () => {
     try {
+        updateSyncStatus("저장 중...", "#f1c40f");
         if (currentEditType === 'title') {
             appState.tripTag = document.getElementById('edit-tripTag').value;
             appState.tripTitle = document.getElementById('edit-tripTitle').value;
@@ -311,7 +314,7 @@ window.saveEdit = () => {
         closeEditModal();
     } catch (e) {
         console.error("저장 오류:", e);
-        alert("정보 저장에 실패했습니다.");
+        updateSyncStatus("저장 실패", "#e74c3c");
     }
 }
 
@@ -375,18 +378,33 @@ async function updateExchangeRate() {
 // --- Firebase Sync ---
 
 function saveToFirebase() {
-    set(tripRef, appState).catch(error => {
+    set(tripRef, appState).then(() => {
+        updateSyncStatus("클라우드 저장됨", "#2ecc71");
+        setTimeout(() => updateSyncStatus("연결됨", "#2ecc71"), 3000);
+    }).catch(error => {
         console.error("Firebase 저장 실패:", error);
-        alert("데이터 저장에 실패했습니다. Firebase 보안 규칙을 확인해 주세요!");
+        updateSyncStatus("저장 실패", "#e74c3c");
     });
 }
 
 function loadFromFirebase() {
+    // Connection monitoring
+    const connectedRef = ref(db, ".info/connected");
+    onValue(connectedRef, (snap) => {
+        if (snap.val() === true) {
+            updateSyncStatus("연결됨", "#2ecc71");
+        } else {
+            updateSyncStatus("연결 끊김", "#e74c3c");
+        }
+    });
+
     onValue(tripRef, (snapshot) => {
         const data = snapshot.val();
         if (data) {
             appState = { ...defaultState, ...data };
             renderAll();
+            updateSyncStatus("최신 데이터 수신", "#2ecc71");
+            setTimeout(() => updateSyncStatus("연결됨", "#2ecc71"), 2000);
         } else {
             saveToFirebase();
         }
