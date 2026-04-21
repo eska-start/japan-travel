@@ -116,7 +116,10 @@ function renderStays() {
                         <p><strong>입실:</strong> ${stay.checkInDate} ${stay.checkInTime}</p>
                         <p><strong>퇴실:</strong> ${stay.checkOutDate} ${stay.checkOutTime}</p>
                     </div>
-                    <i class="fas fa-trash" style="color: #ff7675; cursor: pointer; margin-top: 10px;" onclick="deleteStay(${stay.id})"></i>
+                    <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: flex-end;">
+                        <i class="fas fa-edit" style="color: var(--text-sub); cursor: pointer;" onclick="openEditModal('stay', ${stay.id})"></i>
+                        <i class="fas fa-trash" style="color: #ff7675; cursor: pointer;" onclick="deleteStay(${stay.id})"></i>
+                    </div>
                 </div>
             </div>
             
@@ -144,8 +147,9 @@ function renderStays() {
 
 // --- Modal Functions ---
 
-function openEditModal(type) {
+function openEditModal(type, stayId = null) {
     currentEditType = type;
+    currentStayId = stayId;
     const modal = document.getElementById('editModal');
     const title = document.getElementById('modalTitle');
     const body = document.getElementById('modalBody');
@@ -177,16 +181,17 @@ function openEditModal(type) {
             <label class="label">차량 정보</label><input type="text" id="edit-carInfo" value="${r.carInfo}">
         `;
     } else if (type === 'stay') {
-        title.innerText = '새 숙소 추가';
+        const stay = stayId ? appState.stays.find(s => s.id === stayId) : null;
+        title.innerText = stay ? '숙소 정보 수정' : '새 숙소 추가';
         body.innerHTML = `
-            <label class="label">숙소 이름</label><input type="text" id="edit-stayName" placeholder="예: 소테츠 프레사 인">
-            <label class="label">주소</label><input type="text" id="edit-stayAddress" placeholder="구글 지도 검색용 주소">
-            <label class="label">기간 (예: Day 1 - Day 3)</label><input type="text" id="edit-stayDays" placeholder="Day 1 - Day 3">
+            <label class="label">숙소 이름</label><input type="text" id="edit-stayName" value="${stay ? stay.name : ''}" placeholder="예: 소테츠 프레사 인">
+            <label class="label">주소</label><input type="text" id="edit-stayAddress" value="${stay ? stay.address : ''}" placeholder="구글 지도 검색용 주소">
+            <label class="label">기간 (예: Day 1 - Day 3)</label><input type="text" id="edit-stayDays" value="${stay ? stay.days : ''}" placeholder="Day 1 - Day 3">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div><label class="label">입실 날짜</label><input type="date" id="edit-stayCheckInDate"></div>
-                <div><label class="label">입실 시간</label><input type="time" id="edit-stayCheckInTime"></div>
-                <div><label class="label">퇴실 날짜</label><input type="date" id="edit-stayCheckOutDate"></div>
-                <div><label class="label">퇴실 시간</label><input type="time" id="edit-stayCheckOutTime"></div>
+                <div><label class="label">입실 날짜</label><input type="date" id="edit-stayCheckInDate" value="${stay ? stay.checkInDate : ''}" onchange="handleCheckInChange(this.value)"></div>
+                <div><label class="label">입실 시간</label><input type="time" id="edit-stayCheckInTime" value="${stay ? stay.checkInTime : ''}"></div>
+                <div><label class="label">퇴실 날짜</label><input type="date" id="edit-stayCheckOutDate" value="${stay ? stay.checkOutDate : ''}"></div>
+                <div><label class="label">퇴실 시간</label><input type="time" id="edit-stayCheckOutTime" value="${stay ? stay.checkOutTime : ''}"></div>
             </div>
         `;
     }
@@ -217,8 +222,7 @@ function saveEdit() {
             carInfo: document.getElementById('edit-carInfo').value
         };
     } else if (currentEditType === 'stay') {
-        const newStay = {
-            id: Date.now(),
+        const stayData = {
             name: document.getElementById('edit-stayName').value,
             address: document.getElementById('edit-stayAddress').value,
             days: document.getElementById('edit-stayDays').value,
@@ -226,9 +230,23 @@ function saveEdit() {
             checkInTime: document.getElementById('edit-stayCheckInTime').value,
             checkOutDate: document.getElementById('edit-stayCheckOutDate').value,
             checkOutTime: document.getElementById('edit-stayCheckOutTime').value,
-            subItems: []
         };
-        if(newStay.name) appState.stays.push(newStay);
+
+        if (currentStayId) {
+            // Update existing
+            const index = appState.stays.findIndex(s => s.id === currentStayId);
+            if (index !== -1) {
+                appState.stays[index] = { ...appState.stays[index], ...stayData };
+            }
+        } else {
+            // Add new
+            const newStay = {
+                id: Date.now(),
+                ...stayData,
+                subItems: []
+            };
+            if(newStay.name) appState.stays.push(newStay);
+        }
     }
 
     renderAll();
@@ -297,6 +315,24 @@ async function updateExchangeRate() {
     } catch (error) {
         console.error('환율 정보를 가져오는데 실패했습니다:', error);
         rateEl.innerText = '환율 정보를 불러올 수 없습니다.';
+    }
+}
+
+// --- Helper Functions ---
+
+function handleCheckInChange(checkInDate) {
+    const checkOutInput = document.getElementById('edit-stayCheckOutDate');
+    if (!checkInDate) return;
+
+    const date = new Date(checkInDate);
+    date.setDate(date.getDate() + 1);
+    const minDate = date.toISOString().split('T')[0];
+    
+    checkOutInput.min = minDate;
+    
+    // If current check-out is earlier than check-in + 1, update it
+    if (!checkOutInput.value || checkOutInput.value < minDate) {
+        checkOutInput.value = minDate;
     }
 }
 
