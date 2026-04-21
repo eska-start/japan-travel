@@ -77,6 +77,12 @@ function migrateData(data) {
 }
 
 // --- Trip Selection Logic ---
+window.joinTrip = () => {
+    const input = document.getElementById('trip-id-input');
+    const tripId = input.value.trim();
+    if (tripId) window.location.hash = tripId;
+};
+
 window.joinTripMain = () => {
     const input = document.getElementById('main-trip-id-input');
     const tripId = input.value.trim();
@@ -96,6 +102,26 @@ function updateSyncStatus(status, color) {
     if (dot && text) {
         dot.style.background = color;
         text.innerText = status;
+    }
+}
+
+// --- Exchange Rate Logic ---
+async function fetchExchangeRate() {
+    try {
+        const response = await fetch('https://open.er-api.com/v6/latest/JPY');
+        const data = await response.json();
+        const rate = data.rates.KRW;
+        const lastUpdate = new Date().toLocaleTimeString();
+        
+        const rateEl = document.getElementById('exchange-rate');
+        const updateEl = document.getElementById('last-update');
+        
+        if (rateEl) rateEl.innerText = `100￥ = ${(rate * 100).toFixed(2)}원`;
+        if (updateEl) updateEl.innerText = `최근 업데이트: ${lastUpdate}`;
+    } catch (error) {
+        console.error('환율 정보 로드 실패:', error);
+        const rateEl = document.getElementById('exchange-rate');
+        if (rateEl) rateEl.innerText = '정보 로드 실패';
     }
 }
 
@@ -424,6 +450,8 @@ function loadFromFirebase() {
 
 document.addEventListener('DOMContentLoaded', () => {
     loadFromFirebase();
+    fetchExchangeRate();
+    setInterval(fetchExchangeRate, 1000 * 60 * 10); // 10분마다 업데이트
 });
 
 window.onhashchange = () => window.location.reload();
