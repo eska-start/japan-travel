@@ -318,7 +318,10 @@ async function updateExchangeRate() {
 // --- Firebase Sync ---
 
 function saveToFirebase() {
-    set(tripRef, appState);
+    set(tripRef, appState).catch(error => {
+        console.error("저장 실패:", error);
+        alert("데이터 저장에 실패했습니다. Firebase 보안 규칙을 확인해 주세요!");
+    });
 }
 
 function loadFromFirebase() {
