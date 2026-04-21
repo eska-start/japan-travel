@@ -188,13 +188,21 @@ window.openEditModal = (type, stayId = null) => {
     body.innerHTML = '';
 
     if (type === 'title') {
-        title.innerText = '여행 제목 및 정보 수정';
+        title.innerText = '여행 제목 및 일정 수정';
         body.innerHTML = `
-            <label class="label">상단 태그 (영문)</label><input type="text" id="edit-tripTag" value="${appState.tripTag || ''}">
-            <label class="label">여행 제목</label><input type="text" id="edit-tripTitle" value="${appState.tripTitle || ''}">
+            <label class="label">상단 태그 (영문)</label>
+            <input type="text" id="edit-tripTag" value="${appState.tripTag || ''}">
+            <label class="label">여행 제목</label>
+            <input type="text" id="edit-tripTitle" value="${appState.tripTitle || ''}">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div><label class="label">시작일</label><input type="date" id="edit-tripStartDate" value="${appState.tripStartDate || ''}"></div>
-                <div><label class="label">종료일</label><input type="date" id="edit-tripEndDate" value="${appState.tripEndDate || ''}"></div>
+                <div>
+                    <label class="label">시작 날짜 (달력)</label>
+                    <input type="date" id="edit-tripStartDate" value="${appState.tripStartDate || ''}">
+                </div>
+                <div>
+                    <label class="label">종료 날짜 (달력)</label>
+                    <input type="date" id="edit-tripEndDate" value="${appState.tripEndDate || ''}">
+                </div>
             </div>
         `;
     } else if (type === 'flight') {
@@ -204,8 +212,8 @@ window.openEditModal = (type, stayId = null) => {
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div><label class="label">출발지 (코드)</label><input type="text" id="edit-deptCode" value="${f.deptCode || ''}"></div>
                 <div><label class="label">도착지 (코드)</label><input type="text" id="edit-arrCode" value="${f.arrCode || ''}"></div>
-                <div><label class="label">출발지 (명칭)</label><input type="text" id="edit-deptName" value="${f.deptName || ''}"></div>
-                <div><label class="label">도착지 (명칭)</label><input type="text" id="edit-arrName" value="${f.arrName || ''}"></div>
+                <div><label class="label">출발지 (공항명)</label><input type="text" id="edit-deptName" value="${f.deptName || ''}"></div>
+                <div><label class="label">도착지 (공항명)</label><input type="text" id="edit-arrName" value="${f.arrName || ''}"></div>
                 <div><label class="label">출발 시간</label><input type="text" id="edit-deptTime" value="${f.deptTime || ''}"></div>
                 <div><label class="label">도착 시간</label><input type="text" id="edit-arrTime" value="${f.arrTime || ''}"></div>
                 <div><label class="label">편명</label><input type="text" id="edit-flightNo" value="${f.flightNo || ''}"></div>
@@ -227,7 +235,7 @@ window.openEditModal = (type, stayId = null) => {
         body.innerHTML = `
             <label class="label">숙소 이름</label><input type="text" id="edit-stayName" value="${stay ? stay.name : ''}">
             <label class="label">주소</label><input type="text" id="edit-stayAddress" value="${stay ? stay.address : ''}">
-            <label class="label">기간</label><input type="text" id="edit-stayDays" value="${stay ? stay.days : ''}">
+            <label class="label">기간 (예: Day 1 - 3)</label><input type="text" id="edit-stayDays" value="${stay ? stay.days : ''}">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div><label class="label">입실 날짜</label><input type="date" id="edit-stayCheckInDate" value="${stay ? stay.checkInDate : ''}" onchange="handleCheckInChange(this.value)"></div>
                 <div><label class="label">입실 시간</label><input type="time" id="edit-stayCheckInTime" value="${stay ? stay.checkInTime : ''}"></div>
