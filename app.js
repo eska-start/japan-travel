@@ -49,26 +49,34 @@ let currentStayId = null;
 window.joinTrip = () => {
     const input = document.getElementById('trip-id-input');
     const tripId = input.value.trim();
+    if (tripId) window.location.hash = tripId;
+};
+
+window.joinTripMain = () => {
+    const input = document.getElementById('main-trip-id-input');
+    const tripId = input.value.trim();
     if (tripId) {
         window.location.hash = tripId;
     } else {
-        alert("여행 코드를 입력해 주세요!");
+        alert("이동할 여행 코드를 입력해 주세요!");
     }
 };
 
-// Enter key support for trip ID
+// Enter key support for trip IDs
 document.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && document.activeElement.id === 'trip-id-input') {
-        joinTrip();
+    if (e.key === 'Enter') {
+        if (document.activeElement.id === 'trip-id-input') joinTrip();
+        if (document.activeElement.id === 'main-trip-id-input') joinTripMain();
     }
 });
 
 function updateCurrentTripDisplay() {
-    const display = document.getElementById('current-trip-id');
-    if (display) {
-        const id = getTripId();
-        display.innerHTML = `<i class="fas fa-link"></i> 현재 코드: <strong>${id}</strong>`;
-    }
+    const tripId = getTripId();
+    const sidebarDisplay = document.getElementById('current-trip-id');
+    const sectionDisplay = document.getElementById('section-trip-id-display');
+    
+    if (sidebarDisplay) sidebarDisplay.innerHTML = `<i class="fas fa-link"></i> 현재 코드: <strong>${tripId}</strong>`;
+    if (sectionDisplay) sectionDisplay.innerText = tripId;
 }
 
 // --- Sync Status Handler ---
@@ -217,19 +225,11 @@ window.openEditModal = (type, stayId = null) => {
     if (type === 'title') {
         title.innerText = '여행 제목 및 일정 수정';
         body.innerHTML = `
-            <label class="label">상단 태그 (영문)</label>
-            <input type="text" id="edit-tripTag" value="${appState.tripTag || ''}">
-            <label class="label">여행 제목</label>
-            <input type="text" id="edit-tripTitle" value="${appState.tripTitle || ''}">
+            <label class="label">상단 태그 (영문)</label><input type="text" id="edit-tripTag" value="${appState.tripTag || ''}">
+            <label class="label">여행 제목</label><input type="text" id="edit-tripTitle" value="${appState.tripTitle || ''}">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div>
-                    <label class="label">시작 날짜 (달력)</label>
-                    <input type="date" id="edit-tripStartDate" value="${appState.tripStartDate || ''}">
-                </div>
-                <div>
-                    <label class="label">종료 날짜 (달력)</label>
-                    <input type="date" id="edit-tripEndDate" value="${appState.tripEndDate || ''}">
-                </div>
+                <div><label class="label">시작 날짜 (달력)</label><input type="date" id="edit-tripStartDate" value="${appState.tripStartDate || ''}"></div>
+                <div><label class="label">종료 날짜 (달력)</label><input type="date" id="edit-tripEndDate" value="${appState.tripEndDate || ''}"></div>
             </div>
         `;
     } else if (type === 'flight') {

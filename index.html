@@ -52,6 +52,13 @@
                         <p id="main-date"><i class="far fa-calendar"></i> 2024.10.15 - 2024.10.22 (7박 8일)</p>
                     </div>
                 </div>
+                
+                <!-- 모바일 전용/메인 코드 입력창 -->
+                <div class="card" style="margin-top: 1.5rem; padding: 1rem; display: flex; gap: 10px; align-items: center; background: #fff; border: 1px solid #eee;">
+                    <i class="fas fa-key" style="color: var(--primary);"></i>
+                    <input type="text" id="main-trip-id-input" placeholder="이동할 여행 코드를 입력하세요" style="border: none; flex: 1; font-size: 0.9rem; outline: none;">
+                    <button class="btn-map" style="margin-top: 0; padding: 8px 15px;" onclick="joinTripMain()">이동</button>
+                </div>
             </div>
 
             <!-- 항공편 섹션 -->
@@ -85,6 +92,13 @@
                 
                 <div class="accommodation-container" id="stay-container">
                     <!-- Dynamic Stays -->
+                </div>
+
+                <!-- 현재 여행 코드 표시 영역 -->
+                <div class="card" style="margin-top: 2rem; text-align: center; background: #f8f9fa; border: 1px dashed var(--primary);">
+                    <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 5px;">현재 여행의 공유 코드</p>
+                    <h3 id="section-trip-id-display" style="color: var(--primary); font-size: 1.5rem; letter-spacing: 2px;">로딩 중...</h3>
+                    <p style="font-size: 0.7rem; color: var(--text-sub); margin-top: 10px;"><i class="fas fa-info-circle"></i> 이 코드를 친구에게 알려주면 실시간으로 함께 계획할 수 있습니다!</p>
                 </div>
             </section>
         </main>
