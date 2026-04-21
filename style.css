@@ -360,4 +360,9 @@ input:focus {
     div[style*="display: grid"] {
         grid-template-columns: 1fr !important;
     }
+
+    .info-grid {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+    }
 }
