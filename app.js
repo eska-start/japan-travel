@@ -49,8 +49,18 @@ const getDefaultState = () => ({
 
 // --- State Management ---
 const getTripId = () => {
-    const hash = window.location.hash.substring(1);
-    return hash ? decodeURIComponent(hash) : 'default-trip';
+    const params = new URLSearchParams(window.location.search);
+    let tripId = params.get('trip');
+    
+    // 호환성 유지: 쿼리에 없으면 해시에서 찾기
+    if (!tripId) {
+        const hash = window.location.hash.substring(1);
+        if (hash && !['flights', 'rental', 'accommodation', 'dashboard'].includes(hash)) {
+            tripId = hash;
+        }
+    }
+    
+    return tripId ? decodeURIComponent(tripId) : 'default-trip';
 };
 
 let appState = getDefaultState();
@@ -80,13 +90,21 @@ function migrateData(data) {
 window.joinTrip = () => {
     const input = document.getElementById('trip-id-input');
     const tripId = input.value.trim();
-    if (tripId) window.location.hash = tripId;
+    if (tripId) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('trip', tripId);
+        window.location.href = url.toString();
+    }
 };
 
 window.joinTripMain = () => {
     const input = document.getElementById('main-trip-id-input');
     const tripId = input.value.trim();
-    if (tripId) window.location.hash = tripId;
+    if (tripId) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('trip', tripId);
+        window.location.href = url.toString();
+    }
 };
 
 document.addEventListener('keypress', (e) => {
@@ -494,7 +512,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(fetchExchangeRate, 1000 * 60 * 10); // 10분마다 업데이트
 });
 
-window.onhashchange = () => window.location.reload();
+window.onhashchange = () => {
+    // 섹션 이동 시에는 리로드 하지 않음 (기본 앵커 동작 활용)
+};
 
 window.onclick = (e) => {
     if(e.target.classList.contains('modal')) {
