@@ -17,7 +17,7 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 // --- Default State ---
-const defaultState = {
+const getDefaultState = () => ({
     tripTag: 'OSAKA & KYOTO 2024',
     tripTitle: '오사카 & 교토 힐링 여행',
     tripStartDate: '',
@@ -41,7 +41,7 @@ const defaultState = {
         pickTime: '10/16 09:00 AM', returnPlace: '교토역 앞 토요타 렌터카', carInfo: '토요타 야리스 (소형)'
     },
     stays: []
-};
+});
 
 // --- State Management ---
 const getTripId = () => {
@@ -49,7 +49,7 @@ const getTripId = () => {
     return hash ? decodeURIComponent(hash) : 'default-trip';
 };
 
-let appState = { ...defaultState };
+let appState = getDefaultState();
 let currentEditType = null;
 let currentStayId = null;
 
@@ -60,11 +60,16 @@ function migrateData(data) {
     // 항공편 데이터 마이그레이션 (Flat -> Nested)
     if (data.flight && !data.flight.outbound) {
         console.log("Migrating old flight data format...");
-        const oldFlight = data.flight;
+        const oldFlight = { ...data.flight };
         data.flight = {
             outbound: { ...oldFlight },
-            return: { ...defaultState.flight.return }
+            return: { ...getDefaultState().flight.return }
         };
+    }
+    
+    // 만약 outbound는 있는데 return이 없는 경우 대비
+    if (data.flight && data.flight.outbound && !data.flight.return) {
+        data.flight.return = { ...getDefaultState().flight.return };
     }
     
     return data;
@@ -127,51 +132,50 @@ function renderTitle() {
     const tagEl = document.getElementById('main-tag');
     const titleEl = document.getElementById('main-title');
     const dateEl = document.getElementById('main-date');
-    if (tagEl) tagEl.innerText = appState.tripTag || defaultState.tripTag;
-    if (titleEl) titleEl.innerText = appState.tripTitle || defaultState.tripTitle;
-    if (dateEl) dateEl.innerHTML = `<i class="far fa-calendar"></i> ${appState.tripDateRange || defaultState.tripDateRange}`;
+    if (tagEl) tagEl.innerText = appState.tripTag;
+    if (titleEl) titleEl.innerText = appState.tripTitle;
+    if (dateEl) dateEl.innerHTML = `<i class="far fa-calendar"></i> ${appState.tripDateRange}`;
 }
 
 function renderFlight() {
-    const f = appState.flight || defaultState.flight;
+    const f = appState.flight;
     const container = document.getElementById('flight-display');
     if(!container) return;
 
-    // 만약 마이그레이션이 안 된 경우를 대비한 방어 코드
-    const out = (f.outbound && f.outbound.deptCode) ? f.outbound : defaultState.flight.outbound;
-    const ret = (f.return && f.return.deptCode) ? f.return : defaultState.flight.return;
+    const out = f.outbound;
+    const ret = f.return;
 
     const flightCard = (title, data, icon, color) => `
-        <div class="flight-item" style="flex: 1; min-width: 300px;">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; color: ${color}; font-weight: 700;">
+        <div class="flight-item" style="flex: 1; min-width: 280px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; color: ${color}; font-weight: 700; font-size: 0.95rem;">
                 <i class="fas ${icon}"></i> ${title}
             </div>
-            <div class="flight-info">
+            <div class="flight-info" style="padding: 15px; background: #fafafa; border-radius: 15px; border: 1px solid #f0f0f0;">
                 <div class="departure">
-                    <div class="airport-code">${data.deptCode || '-'}</div>
+                    <div class="airport-code" style="font-size: 1.8rem;">${data.deptCode || '-'}</div>
                     <div class="airport-name">${data.deptName || '-'}</div>
-                    <div class="time">${data.deptTime || '-'}</div>
+                    <div class="time" style="font-weight: 700;">${data.deptTime || '-'}</div>
                 </div>
                 <div class="flight-path">
-                    <span>${data.flightNo || '-'}</span>
-                    <div class="plane-icon" style="background: transparent;"><i class="fas fa-plane" style="color: ${color}"></i></div>
-                    <span>${data.duration || '-'}</span>
+                    <span style="font-size: 0.75rem;">${data.flightNo || '-'}</span>
+                    <div class="plane-icon" style="background: transparent; margin: 5px 0;"><i class="fas fa-plane" style="color: ${color}"></i></div>
+                    <span style="font-size: 0.75rem;">${data.duration || '-'}</span>
                 </div>
                 <div class="arrival">
-                    <div class="airport-code">${data.arrCode || '-'}</div>
+                    <div class="airport-code" style="font-size: 1.8rem;">${data.arrCode || '-'}</div>
                     <div class="airport-name">${data.arrName || '-'}</div>
-                    <div class="time">${data.arrTime || '-'}</div>
+                    <div class="time" style="font-weight: 700;">${data.arrTime || '-'}</div>
                 </div>
             </div>
-            <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #f5f5f5; display: flex; gap: 15px; font-size: 0.85rem;">
-                <div class="info-item"><span class="label">게이트</span><span class="value">${data.gate || '-'}</span></div>
-                <div class="info-item"><span class="label">날짜</span><span class="value">${data.date || '-'}</span></div>
+            <div style="margin-top: 10px; padding-top: 8px; display: flex; gap: 15px; font-size: 0.8rem;">
+                <div class="info-item"><span class="label">게이트</span><span class="value" style="color: var(--text-main);">${data.gate || '-'}</span></div>
+                <div class="info-item"><span class="label">날짜</span><span class="value" style="color: var(--text-main);">${data.date || '-'}</span></div>
             </div>
         </div>
     `;
 
     container.innerHTML = `
-        <div style="display: flex; flex-wrap: wrap; gap: 30px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 20px;">
             ${flightCard('출국편 (Outbound)', out, 'fa-plane-departure', 'var(--primary)')}
             ${flightCard('귀국편 (Return)', ret, 'fa-plane-arrival', '#3498db')}
         </div>
@@ -179,7 +183,7 @@ function renderFlight() {
 }
 
 function renderRental() {
-    const r = appState.rental || defaultState.rental;
+    const r = appState.rental;
     const container = document.getElementById('rental-display');
     if(!container) return;
     container.innerHTML = `
@@ -267,50 +271,49 @@ window.openEditModal = (type, stayId = null) => {
     if (type === 'title') {
         title.innerText = '여행 제목 및 일정 수정';
         body.innerHTML = `
-            <label class="label">상단 태그 (영문)</label><input type="text" id="edit-tripTag" value="${appState.tripTag || ''}">
-            <label class="label">여행 제목</label><input type="text" id="edit-tripTitle" value="${appState.tripTitle || ''}">
+            <label class="label">상단 태그 (영문)</label><input type="text" id="edit-tripTag" value="${appState.tripTag}">
+            <label class="label">여행 제목</label><input type="text" id="edit-tripTitle" value="${appState.tripTitle}">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div><label class="label">시작 날짜 (달력)</label><input type="date" id="edit-tripStartDate" value="${appState.tripStartDate || ''}"></div>
-                <div><label class="label">종료 날짜 (달력)</label><input type="date" id="edit-tripEndDate" value="${appState.tripEndDate || ''}"></div>
+                <div><label class="label">시작 날짜</label><input type="date" id="edit-tripStartDate" value="${appState.tripStartDate}"></div>
+                <div><label class="label">종료 날짜</label><input type="date" id="edit-tripEndDate" value="${appState.tripEndDate}"></div>
             </div>
         `;
     } else if (type === 'flight') {
         title.innerText = '항공편 정보 수정 (왕복)';
-        const f = appState.flight || defaultState.flight;
-        const out = f.outbound || defaultState.flight.outbound;
-        const ret = f.return || defaultState.flight.return;
+        const out = appState.flight.outbound;
+        const ret = appState.flight.return;
         
         body.innerHTML = `
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+            <div style="background: #fff5f5; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #ffe3e3;">
                 <h4 style="color: var(--primary); margin-bottom: 10px;"><i class="fas fa-plane-departure"></i> 출국편 (Outbound)</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div><label class="label">출발지 코드</label><input type="text" id="edit-out-deptCode" value="${out.deptCode || ''}"></div>
-                    <div><label class="label">도착지 코드</label><input type="text" id="edit-out-arrCode" value="${out.arrCode || ''}"></div>
-                    <div><label class="label">편명</label><input type="text" id="edit-out-flightNo" value="${out.flightNo || ''}"></div>
-                    <div><label class="label">날짜</label><input type="text" id="edit-out-date" value="${out.date || ''}"></div>
-                    <div><label class="label">출발 시간</label><input type="text" id="edit-out-deptTime" value="${out.deptTime || ''}"></div>
-                    <div><label class="label">게이트</label><input type="text" id="edit-out-gate" value="${out.gate || ''}"></div>
+                    <div><label class="label">출발지 코드</label><input type="text" id="edit-out-deptCode" value="${out.deptCode}"></div>
+                    <div><label class="label">도착지 코드</label><input type="text" id="edit-out-arrCode" value="${out.arrCode}"></div>
+                    <div><label class="label">편명</label><input type="text" id="edit-out-flightNo" value="${out.flightNo}"></div>
+                    <div><label class="label">날짜</label><input type="text" id="edit-out-date" value="${out.date}"></div>
+                    <div><label class="label">출발 시간</label><input type="text" id="edit-out-deptTime" value="${out.deptTime}"></div>
+                    <div><label class="label">게이트</label><input type="text" id="edit-out-gate" value="${out.gate}"></div>
                 </div>
             </div>
-            <div style="background: #eef7ff; padding: 15px; border-radius: 12px;">
+            <div style="background: #f0f7ff; padding: 15px; border-radius: 12px; border: 1px solid #e1efff;">
                 <h4 style="color: #3498db; margin-bottom: 10px;"><i class="fas fa-plane-arrival"></i> 귀국편 (Return)</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div><label class="label">출발지 코드</label><input type="text" id="edit-ret-deptCode" value="${ret.deptCode || ''}"></div>
-                    <div><label class="label">도착지 코드</label><input type="text" id="edit-ret-arrCode" value="${ret.arrCode || ''}"></div>
-                    <div><label class="label">편명</label><input type="text" id="edit-ret-flightNo" value="${ret.flightNo || ''}"></div>
-                    <div><label class="label">날짜</label><input type="text" id="edit-ret-date" value="${ret.date || ''}"></div>
-                    <div><label class="label">출발 시간</label><input type="text" id="edit-ret-deptTime" value="${ret.deptTime || ''}"></div>
-                    <div><label class="label">게이트</label><input type="text" id="edit-ret-gate" value="${ret.gate || ''}"></div>
+                    <div><label class="label">출발지 코드</label><input type="text" id="edit-ret-deptCode" value="${ret.deptCode}"></div>
+                    <div><label class="label">도착지 코드</label><input type="text" id="edit-ret-arrCode" value="${ret.arrCode}"></div>
+                    <div><label class="label">편명</label><input type="text" id="edit-ret-flightNo" value="${ret.flightNo}"></div>
+                    <div><label class="label">날짜</label><input type="text" id="edit-ret-date" value="${ret.date}"></div>
+                    <div><label class="label">출발 시간</label><input type="text" id="edit-ret-deptTime" value="${ret.deptTime}"></div>
+                    <div><label class="label">게이트</label><input type="text" id="edit-ret-gate" value="${ret.gate}"></div>
                 </div>
             </div>
         `;
     } else if (type === 'rental') {
         title.innerText = '렌트카 정보 수정';
-        const r = appState.rental || defaultState.rental;
+        const r = appState.rental;
         body.innerHTML = `
-            <label class="label">빌리는 시간</label><input type="text" id="edit-pickTime" value="${r.pickTime || ''}">
-            <label class="label">반납 장소</label><input type="text" id="edit-returnPlace" value="${r.returnPlace || ''}">
-            <label class="label">차량 정보</label><input type="text" id="edit-carInfo" value="${r.carInfo || ''}">
+            <label class="label">빌리는 시간</label><input type="text" id="edit-pickTime" value="${r.pickTime}">
+            <label class="label">반납 장소</label><input type="text" id="edit-returnPlace" value="${r.returnPlace}">
+            <label class="label">차량 정보</label><input type="text" id="edit-carInfo" value="${r.carInfo}">
         `;
     } else if (type === 'stay') {
         const stay = stayId ? appState.stays.find(s => s.id == stayId) : null;
@@ -334,7 +337,7 @@ window.closeEditModal = () => {
 }
 
 function calculateDuration(start, end) {
-    if (!start || !end) return '';
+    if (!start || !end) return '날짜를 설정해 주세요';
     const d1 = new Date(start);
     const d2 = new Date(end);
     const diff = d2.getTime() - d1.getTime();
@@ -361,9 +364,9 @@ window.saveEdit = () => {
                     date: document.getElementById('edit-out-date').value,
                     deptTime: document.getElementById('edit-out-deptTime').value,
                     gate: document.getElementById('edit-out-gate').value,
-                    deptName: (appState.flight && appState.flight.outbound && appState.flight.outbound.deptName) || '인천',
-                    arrName: (appState.flight && appState.flight.outbound && appState.flight.outbound.arrName) || '간사이',
-                    duration: (appState.flight && appState.flight.outbound && appState.flight.outbound.duration) || '2h 10m'
+                    deptName: appState.flight.outbound.deptName,
+                    arrName: appState.flight.outbound.arrName,
+                    duration: appState.flight.outbound.duration
                 },
                 return: {
                     deptCode: document.getElementById('edit-ret-deptCode').value,
@@ -372,9 +375,9 @@ window.saveEdit = () => {
                     date: document.getElementById('edit-ret-date').value,
                     deptTime: document.getElementById('edit-ret-deptTime').value,
                     gate: document.getElementById('edit-ret-gate').value,
-                    deptName: (appState.flight && appState.flight.return && appState.flight.return.deptName) || '간사이',
-                    arrName: (appState.flight && appState.flight.return && appState.flight.return.arrName) || '인천',
-                    duration: (appState.flight && appState.flight.return && appState.flight.return.duration) || '1h 50m'
+                    deptName: appState.flight.return.deptName,
+                    arrName: appState.flight.return.arrName,
+                    duration: appState.flight.return.duration
                 }
             };
         } else if (currentEditType === 'rental') {
@@ -411,68 +414,12 @@ window.saveEdit = () => {
     }
 }
 
-window.openAddSubModal = (stayId) => {
-    currentStayId = stayId;
-    document.getElementById('addSubModal').style.display = 'flex';
-}
-
-window.closeSubModal = () => {
-    document.getElementById('addSubModal').style.display = 'none';
-    document.getElementById('itemTime').value = '';
-    document.getElementById('itemDesc').value = '';
-}
-
-window.addItineraryItem = () => {
-    const time = document.getElementById('itemTime').value;
-    const desc = document.getElementById('itemDesc').value;
-    if (!time || !desc) return;
-    const stay = appState.stays.find(s => s.id == currentStayId);
-    if (stay) {
-        if(!stay.subItems) stay.subItems = [];
-        stay.subItems.push({ time, desc });
-        saveToFirebase();
-    }
-    closeSubModal();
-}
-
-window.deleteSubItem = (stayId, time, desc) => {
-    const stay = appState.stays.find(s => s.id == stayId);
-    if (stay) {
-        stay.subItems = stay.subItems.filter(item => !(item.time === time && item.desc === desc));
-        saveToFirebase();
-    }
-}
-
-window.deleteStay = (stayId) => {
-    if(confirm('이 숙소와 관련된 모든 일정을 삭제하시겠습니까?')) {
-        appState.stays = appState.stays.filter(s => s.id != stayId);
-        saveToFirebase();
-    }
-}
-
-async function updateExchangeRate() {
-    const rateEl = document.getElementById('exchange-rate');
-    const updateEl = document.getElementById('last-update');
-    try {
-        const response = await fetch('https://open.er-api.com/v6/latest/JPY');
-        const data = await response.json();
-        const krwRate = data.rates.KRW;
-        if(rateEl) rateEl.innerHTML = `100 JPY = <span style="color: var(--primary);">${(krwRate * 100).toFixed(2)}</span> KRW`;
-        if(updateEl) updateEl.innerText = `마지막 업데이트: ${new Date().toLocaleTimeString()}`;
-    } catch (error) {
-        if(rateEl) rateEl.innerText = '환율 정보 로드 실패';
-    }
-}
-
 function saveToFirebase() {
     const tripId = getTripId();
     const tripRef = ref(db, 'trips/' + tripId);
     set(tripRef, appState).then(() => {
         updateSyncStatus("클라우드 저장됨", "#2ecc71");
         setTimeout(() => updateSyncStatus("연결됨", "#2ecc71"), 3000);
-    }).catch(error => {
-        console.error("Firebase 저장 실패:", error);
-        updateSyncStatus("저장 실패", "#e74c3c");
     });
 }
 
@@ -480,24 +427,15 @@ function loadFromFirebase() {
     const tripId = getTripId();
     const tripRef = ref(db, 'trips/' + tripId);
 
-    const connectedRef = ref(db, ".info/connected");
-    onValue(connectedRef, (snap) => {
-        if (snap.val() === true) {
-            updateSyncStatus("연결됨", "#2ecc71");
-        } else {
-            updateSyncStatus("연결 끊김", "#e74c3c");
-        }
-    });
-
     onValue(tripRef, (snapshot) => {
         let data = snapshot.val();
         if (data) {
-            data = migrateData(data); // 마이그레이션 실행
-            appState = { ...defaultState, ...data };
+            data = migrateData(data);
+            // Deep Merge or careful assignment
+            appState = { ...getDefaultState(), ...data };
             if(!appState.stays) appState.stays = [];
             renderAll();
             updateSyncStatus("최신 데이터 수신", "#2ecc71");
-            setTimeout(() => updateSyncStatus("연결됨", "#2ecc71"), 2000);
         } else {
             saveToFirebase();
         }
@@ -532,3 +470,52 @@ window.onclick = function(event) {
 window.onhashchange = () => {
     window.location.reload();
 };
+
+// 미사용 함수 정리 및 기타 이벤트 리스너 생략 (원본 로직 유지)
+window.openAddSubModal = (stayId) => {
+    currentStayId = stayId;
+    document.getElementById('addSubModal').style.display = 'flex';
+}
+window.closeSubModal = () => {
+    document.getElementById('addSubModal').style.display = 'none';
+    document.getElementById('itemTime').value = '';
+    document.getElementById('itemDesc').value = '';
+}
+window.addItineraryItem = () => {
+    const time = document.getElementById('itemTime').value;
+    const desc = document.getElementById('itemDesc').value;
+    if (!time || !desc) return;
+    const stay = appState.stays.find(s => s.id == currentStayId);
+    if (stay) {
+        if(!stay.subItems) stay.subItems = [];
+        stay.subItems.push({ time, desc });
+        saveToFirebase();
+    }
+    closeSubModal();
+}
+window.deleteSubItem = (stayId, time, desc) => {
+    const stay = appState.stays.find(s => s.id == stayId);
+    if (stay) {
+        stay.subItems = stay.subItems.filter(item => !(item.time === time && item.desc === desc));
+        saveToFirebase();
+    }
+}
+window.deleteStay = (stayId) => {
+    if(confirm('이 숙소와 관련된 모든 일정을 삭제하시겠습니까?')) {
+        appState.stays = appState.stays.filter(s => s.id != stayId);
+        saveToFirebase();
+    }
+}
+async function updateExchangeRate() {
+    const rateEl = document.getElementById('exchange-rate');
+    const updateEl = document.getElementById('last-update');
+    try {
+        const response = await fetch('https://open.er-api.com/v6/latest/JPY');
+        const data = await response.json();
+        const krwRate = data.rates.KRW;
+        if(rateEl) rateEl.innerHTML = `100 JPY = <span style="color: var(--primary);">${(krwRate * 100).toFixed(2)}</span> KRW`;
+        if(updateEl) updateEl.innerText = `마지막 업데이트: ${new Date().toLocaleTimeString()}`;
+    } catch (error) {
+        if(rateEl) rateEl.innerText = '환율 정보 로드 실패';
+    }
+}
