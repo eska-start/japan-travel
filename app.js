@@ -19,7 +19,7 @@ let appState = {
     },
     stays: [
         {
-            id: Date.now(),
+            id: 'initial-stay',
             name: '온야도 노노 교토시치조',
             address: '491 Zaimokucho, Shimogyo Ward, Kyoto',
             days: 'Day 1 - Day 3',
@@ -117,8 +117,8 @@ function renderStays() {
                         <p><strong>퇴실:</strong> ${stay.checkOutDate} ${stay.checkOutTime}</p>
                     </div>
                     <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: flex-end;">
-                        <i class="fas fa-edit" style="color: var(--text-sub); cursor: pointer;" onclick="openEditModal('stay', ${stay.id})"></i>
-                        <i class="fas fa-trash" style="color: #ff7675; cursor: pointer;" onclick="deleteStay(${stay.id})"></i>
+                        <i class="fas fa-edit" style="color: var(--text-sub); cursor: pointer;" onclick="openEditModal('stay', '${stay.id}')"></i>
+                        <i class="fas fa-trash" style="color: #ff7675; cursor: pointer;" onclick="deleteStay('${stay.id}')"></i>
                     </div>
                 </div>
             </div>
@@ -136,11 +136,11 @@ function renderStays() {
                             <span style="font-weight: 700; margin-right: 10px;">${item.time}</span>
                             <span>${item.desc}</span>
                         </div>
-                        <i class="fas fa-times" style="color: #ccc; cursor: pointer;" onclick="deleteSubItem(${stay.id}, '${item.time}', '${item.desc}')"></i>
+                        <i class="fas fa-times" style="color: #ccc; cursor: pointer;" onclick="deleteSubItem('${stay.id}', '${item.time}', '${item.desc}')"></i>
                     </div>
                 `).join('')}
             </div>
-            <button class="btn-add-sub" onclick="openAddSubModal(${stay.id})"><i class="fas fa-plus"></i> 세부 일정 추가</button>
+            <button class="btn-add-sub" onclick="openAddSubModal('${stay.id}')"><i class="fas fa-plus"></i> 세부 일정 추가</button>
         </div>
     `).join('');
 }
@@ -181,7 +181,7 @@ function openEditModal(type, stayId = null) {
             <label class="label">차량 정보</label><input type="text" id="edit-carInfo" value="${r.carInfo}">
         `;
     } else if (type === 'stay') {
-        const stay = stayId ? appState.stays.find(s => s.id === stayId) : null;
+        const stay = stayId ? appState.stays.find(s => s.id == stayId) : null;
         title.innerText = stay ? '숙소 정보 수정' : '새 숙소 추가';
         body.innerHTML = `
             <label class="label">숙소 이름</label><input type="text" id="edit-stayName" value="${stay ? stay.name : ''}" placeholder="예: 소테츠 프레사 인">
@@ -234,14 +234,14 @@ function saveEdit() {
 
         if (currentStayId) {
             // Update existing
-            const index = appState.stays.findIndex(s => s.id === currentStayId);
+            const index = appState.stays.findIndex(s => s.id == currentStayId);
             if (index !== -1) {
                 appState.stays[index] = { ...appState.stays[index], ...stayData };
             }
         } else {
             // Add new
             const newStay = {
-                id: Date.now(),
+                id: String(Date.now()),
                 ...stayData,
                 subItems: []
             };
@@ -283,7 +283,7 @@ function addItineraryItem() {
 }
 
 function deleteSubItem(stayId, time, desc) {
-    const stay = appState.stays.find(s => s.id === stayId);
+    const stay = appState.stays.find(s => s.id == stayId);
     if (stay) {
         stay.subItems = stay.subItems.filter(item => !(item.time === time && item.desc === desc));
         renderStays();
@@ -293,7 +293,7 @@ function deleteSubItem(stayId, time, desc) {
 
 function deleteStay(stayId) {
     if(confirm('이 숙소와 관련된 모든 일정을 삭제하시겠습니까?')) {
-        appState.stays = appState.stays.filter(s => s.id !== stayId);
+        appState.stays = appState.stays.filter(s => s.id != stayId);
         renderStays();
         saveToLocal();
     }
