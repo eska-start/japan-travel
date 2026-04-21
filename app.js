@@ -18,11 +18,12 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 // --- State Management ---
-// Determine Trip ID from URL hash (e.g., #my-trip)
 const getTripId = () => window.location.hash.substring(1) || 'default-trip';
 const tripRef = ref(db, 'trips/' + getTripId());
 
 let appState = {
+    tripTitle: '오사카 & 교토 힐링 여행',
+    tripDateRange: '2024.10.15 - 2024.10.22 (7박 8일)',
     flight: {
         deptCode: 'ICN', deptName: '인천 국제공항', deptTime: '10:30 AM',
         arrCode: 'KIX', arrName: '간사이 국제공항', arrTime: '12:40 PM',
@@ -54,9 +55,17 @@ let currentStayId = null;
 // --- Rendering Functions ---
 
 function renderAll() {
+    renderTitle();
     renderFlight();
     renderRental();
     renderStays();
+}
+
+function renderTitle() {
+    const titleEl = document.getElementById('main-title');
+    const dateEl = document.getElementById('main-date');
+    if (titleEl) titleEl.innerText = appState.tripTitle || '나의 일본 여행';
+    if (dateEl) dateEl.innerHTML = `<i class="far fa-calendar"></i> ${appState.tripDateRange || '날짜를 설정해 주세요'}`;
 }
 
 function renderFlight() {
@@ -119,7 +128,7 @@ function renderRental() {
 function renderStays() {
     const container = document.getElementById('stay-container');
     if(!container) return;
-    container.innerHTML = appState.stays.map(stay => `
+    container.innerHTML = (appState.stays || []).map(stay => `
         <div class="card" id="stay-${stay.id}">
             <div class="flex-between">
                 <div>
@@ -173,7 +182,13 @@ window.openEditModal = (type, stayId = null) => {
     modal.style.display = 'flex';
     body.innerHTML = '';
 
-    if (type === 'flight') {
+    if (type === 'title') {
+        title.innerText = '여행 제목 및 기간 수정';
+        body.innerHTML = `
+            <label class="label">여행 제목</label><input type="text" id="edit-tripTitle" value="${appState.tripTitle || ''}" placeholder="예: 오사카 힐링 여행">
+            <label class="label">여행 기간</label><input type="text" id="edit-tripDateRange" value="${appState.tripDateRange || ''}" placeholder="예: 2024.10.15 - 10.22">
+        `;
+    } else if (type === 'flight') {
         title.innerText = '항공편 정보 수정';
         const f = appState.flight;
         body.innerHTML = `
@@ -218,7 +233,10 @@ window.closeEditModal = () => {
 }
 
 window.saveEdit = () => {
-    if (currentEditType === 'flight') {
+    if (currentEditType === 'title') {
+        appState.tripTitle = document.getElementById('edit-tripTitle').value;
+        appState.tripDateRange = document.getElementById('edit-tripDateRange').value;
+    } else if (currentEditType === 'flight') {
         appState.flight = {
             deptCode: document.getElementById('edit-deptCode').value,
             arrCode: document.getElementById('edit-arrCode').value,
@@ -251,6 +269,7 @@ window.saveEdit = () => {
             const index = appState.stays.findIndex(s => s.id == currentStayId);
             if (index !== -1) appState.stays[index] = { ...appState.stays[index], ...stayData };
         } else {
+            if(!appState.stays) appState.stays = [];
             appState.stays.push({ id: String(Date.now()), ...stayData, subItems: [] });
         }
     }
@@ -330,10 +349,8 @@ function loadFromFirebase() {
         const data = snapshot.val();
         if (data) {
             appState = data;
-            if(!appState.stays) appState.stays = [];
             renderAll();
         } else {
-            // Initial save if no data exists
             saveToFirebase();
         }
     });
@@ -368,7 +385,6 @@ window.onclick = function(event) {
     }
 }
 
-// Sync on Hash Change
 window.onhashchange = () => {
     window.location.reload();
 };
