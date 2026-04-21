@@ -89,7 +89,6 @@ h1 {
     font-size: 2.8rem;
     margin: 1rem 0;
     letter-spacing: -1px;
-    word-break: keep-all;
 }
 
 .edit-trigger {
@@ -97,11 +96,12 @@ h1 {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s;
+    transition: all 0.2s;
 }
 
 .edit-trigger:hover {
-    transform: scale(1.1);
+    background: rgba(255,255,255,0.2) !important;
+    transform: scale(1.05);
 }
 
 /* 섹션 및 카드 */
@@ -307,13 +307,13 @@ input:focus {
     }
 
     .hero-banner {
-        padding: 2.5rem 1.5rem;
-        border-radius: 18px;
+        padding: 3rem 1.5rem;
+        border-radius: 20px;
     }
 
     h1 {
-        font-size: 1.8rem;
-        line-height: 1.2;
+        font-size: 2rem;
+        line-height: 1.3;
     }
 
     .airport-code {
