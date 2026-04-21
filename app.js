@@ -62,7 +62,6 @@ window.joinTripMain = () => {
     }
 };
 
-// Enter key support for trip IDs
 document.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         if (document.activeElement.id === 'trip-id-input') joinTrip();
@@ -168,7 +167,15 @@ function renderRental() {
 function renderStays() {
     const container = document.getElementById('stay-container');
     if(!container) return;
-    container.innerHTML = (appState.stays || []).map(stay => `
+
+    // 날짜별 정렬 로직 추가
+    const sortedStays = [...(appState.stays || [])].sort((a, b) => {
+        if (!a.checkInDate) return 1;
+        if (!b.checkInDate) return -1;
+        return new Date(a.checkInDate) - new Date(b.checkInDate);
+    });
+
+    container.innerHTML = sortedStays.map(stay => `
         <div class="card" id="stay-${stay.id}">
             <div class="flex-between">
                 <div>
@@ -343,8 +350,6 @@ window.saveEdit = () => {
     }
 }
 
-// --- Sub Itinerary Logic ---
-
 window.openAddSubModal = (stayId) => {
     currentStayId = stayId;
     document.getElementById('addSubModal').style.display = 'flex';
@@ -384,8 +389,6 @@ window.deleteStay = (stayId) => {
     }
 }
 
-// --- Exchange Rate API ---
-
 async function updateExchangeRate() {
     const rateEl = document.getElementById('exchange-rate');
     const updateEl = document.getElementById('last-update');
@@ -399,8 +402,6 @@ async function updateExchangeRate() {
         if(rateEl) rateEl.innerText = '환율 정보 로드 실패';
     }
 }
-
-// --- Firebase Sync ---
 
 function saveToFirebase() {
     const tripId = getTripId();
@@ -418,7 +419,6 @@ function loadFromFirebase() {
     const tripId = getTripId();
     const tripRef = ref(db, 'trips/' + tripId);
 
-    // Connection monitoring
     const connectedRef = ref(db, ".info/connected");
     onValue(connectedRef, (snap) => {
         if (snap.val() === true) {
@@ -442,8 +442,6 @@ function loadFromFirebase() {
     });
 }
 
-// --- Helper Functions ---
-
 window.handleCheckInChange = (checkInDate) => {
     const checkOutInput = document.getElementById('edit-stayCheckOutDate');
     if (!checkInDate || !checkOutInput) return;
@@ -455,8 +453,6 @@ window.handleCheckInChange = (checkInDate) => {
         checkOutInput.value = minDate;
     }
 }
-
-// --- Initialization ---
 
 document.addEventListener('DOMContentLoaded', () => {
     loadFromFirebase();
