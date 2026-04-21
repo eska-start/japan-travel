@@ -53,6 +53,23 @@ let appState = { ...defaultState };
 let currentEditType = null;
 let currentStayId = null;
 
+// --- Data Migration Logic ---
+function migrateData(data) {
+    if (!data) return data;
+    
+    // 항공편 데이터 마이그레이션 (Flat -> Nested)
+    if (data.flight && !data.flight.outbound) {
+        console.log("Migrating old flight data format...");
+        const oldFlight = data.flight;
+        data.flight = {
+            outbound: { ...oldFlight },
+            return: { ...defaultState.flight.return }
+        };
+    }
+    
+    return data;
+}
+
 // --- Trip Selection Logic ---
 window.joinTrip = () => {
     const input = document.getElementById('trip-id-input');
@@ -120,8 +137,9 @@ function renderFlight() {
     const container = document.getElementById('flight-display');
     if(!container) return;
 
-    const out = f.outbound || defaultState.flight.outbound;
-    const ret = f.return || defaultState.flight.return;
+    // 만약 마이그레이션이 안 된 경우를 대비한 방어 코드
+    const out = (f.outbound && f.outbound.deptCode) ? f.outbound : defaultState.flight.outbound;
+    const ret = (f.return && f.return.deptCode) ? f.return : defaultState.flight.return;
 
     const flightCard = (title, data, icon, color) => `
         <div class="flight-item" style="flex: 1; min-width: 300px;">
@@ -343,9 +361,9 @@ window.saveEdit = () => {
                     date: document.getElementById('edit-out-date').value,
                     deptTime: document.getElementById('edit-out-deptTime').value,
                     gate: document.getElementById('edit-out-gate').value,
-                    deptName: appState.flight.outbound.deptName || '인천',
-                    arrName: appState.flight.outbound.arrName || '간사이',
-                    duration: appState.flight.outbound.duration || '2h 10m'
+                    deptName: (appState.flight && appState.flight.outbound && appState.flight.outbound.deptName) || '인천',
+                    arrName: (appState.flight && appState.flight.outbound && appState.flight.outbound.arrName) || '간사이',
+                    duration: (appState.flight && appState.flight.outbound && appState.flight.outbound.duration) || '2h 10m'
                 },
                 return: {
                     deptCode: document.getElementById('edit-ret-deptCode').value,
@@ -354,9 +372,9 @@ window.saveEdit = () => {
                     date: document.getElementById('edit-ret-date').value,
                     deptTime: document.getElementById('edit-ret-deptTime').value,
                     gate: document.getElementById('edit-ret-gate').value,
-                    deptName: appState.flight.return.deptName || '간사이',
-                    arrName: appState.flight.return.arrName || '인천',
-                    duration: appState.flight.return.duration || '1h 50m'
+                    deptName: (appState.flight && appState.flight.return && appState.flight.return.deptName) || '간사이',
+                    arrName: (appState.flight && appState.flight.return && appState.flight.return.arrName) || '인천',
+                    duration: (appState.flight && appState.flight.return && appState.flight.return.duration) || '1h 50m'
                 }
             };
         } else if (currentEditType === 'rental') {
@@ -472,8 +490,9 @@ function loadFromFirebase() {
     });
 
     onValue(tripRef, (snapshot) => {
-        const data = snapshot.val();
+        let data = snapshot.val();
         if (data) {
+            data = migrateData(data); // 마이그레이션 실행
             appState = { ...defaultState, ...data };
             if(!appState.stays) appState.stays = [];
             renderAll();
