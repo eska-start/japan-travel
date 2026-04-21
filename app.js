@@ -24,10 +24,18 @@ const defaultState = {
     tripEndDate: '',
     tripDateRange: '날짜를 설정해 주세요',
     flight: {
-        deptCode: 'ICN', deptName: '인천 국제공항', deptTime: '10:30 AM',
-        arrCode: 'KIX', arrName: '간사이 국제공항', arrTime: '12:40 PM',
-        flightNo: 'OZ112', duration: '2h 10m', gate: '게이트 정보',
-        date: '2024년 10월 15일 (화)'
+        outbound: {
+            deptCode: 'ICN', deptName: '인천', deptTime: '10:30 AM',
+            arrCode: 'KIX', arrName: '간사이', arrTime: '12:40 PM',
+            flightNo: 'OZ112', duration: '2h 10m', gate: '게이트 정보',
+            date: '2024년 10월 15일'
+        },
+        return: {
+            deptCode: 'KIX', deptName: '간사이', deptTime: '18:00 PM',
+            arrCode: 'ICN', arrName: '인천', arrTime: '19:50 PM',
+            flightNo: 'OZ111', duration: '1h 50m', gate: '게이트 정보',
+            date: '2024년 10월 22일'
+        }
     },
     rental: {
         pickTime: '10/16 09:00 AM', returnPlace: '교토역 앞 토요타 렌터카', carInfo: '토요타 야리스 (소형)'
@@ -111,33 +119,43 @@ function renderFlight() {
     const f = appState.flight || defaultState.flight;
     const container = document.getElementById('flight-display');
     if(!container) return;
-    container.innerHTML = `
-        <div class="flight-info">
-            <div class="departure">
-                <div class="airport-code">${f.deptCode || '-'}</div>
-                <div class="airport-name">${f.deptName || '-'}</div>
-                <div class="time">${f.deptTime || '-'}</div>
+
+    const out = f.outbound || defaultState.flight.outbound;
+    const ret = f.return || defaultState.flight.return;
+
+    const flightCard = (title, data, icon, color) => `
+        <div class="flight-item" style="flex: 1; min-width: 300px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; color: ${color}; font-weight: 700;">
+                <i class="fas ${icon}"></i> ${title}
             </div>
-            <div class="flight-path">
-                <span>${f.flightNo || '-'}</span>
-                <div class="plane-icon"><i class="fas fa-plane"></i></div>
-                <span>${f.duration || '-'}</span>
+            <div class="flight-info">
+                <div class="departure">
+                    <div class="airport-code">${data.deptCode || '-'}</div>
+                    <div class="airport-name">${data.deptName || '-'}</div>
+                    <div class="time">${data.deptTime || '-'}</div>
+                </div>
+                <div class="flight-path">
+                    <span>${data.flightNo || '-'}</span>
+                    <div class="plane-icon" style="background: transparent;"><i class="fas fa-plane" style="color: ${color}"></i></div>
+                    <span>${data.duration || '-'}</span>
+                </div>
+                <div class="arrival">
+                    <div class="airport-code">${data.arrCode || '-'}</div>
+                    <div class="airport-name">${data.arrName || '-'}</div>
+                    <div class="time">${data.arrTime || '-'}</div>
+                </div>
             </div>
-            <div class="arrival">
-                <div class="airport-code">${f.arrCode || '-'}</div>
-                <div class="airport-name">${f.arrName || '-'}</div>
-                <div class="time">${f.arrTime || '-'}</div>
+            <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #f5f5f5; display: flex; gap: 15px; font-size: 0.85rem;">
+                <div class="info-item"><span class="label">게이트</span><span class="value">${data.gate || '-'}</span></div>
+                <div class="info-item"><span class="label">날짜</span><span class="value">${data.date || '-'}</span></div>
             </div>
         </div>
-        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; display: flex; gap: 20px;">
-            <div class="info-item">
-                <span class="label">탑승 위치</span>
-                <span class="value">${f.gate || '-'}</span>
-            </div>
-            <div class="info-item">
-                <span class="label">날짜</span>
-                <span class="value">${f.date || '-'}</span>
-            </div>
+    `;
+
+    container.innerHTML = `
+        <div style="display: flex; flex-wrap: wrap; gap: 30px;">
+            ${flightCard('출국편 (Outbound)', out, 'fa-plane-departure', 'var(--primary)')}
+            ${flightCard('귀국편 (Return)', ret, 'fa-plane-arrival', '#3498db')}
         </div>
     `;
 }
@@ -168,7 +186,6 @@ function renderStays() {
     const container = document.getElementById('stay-container');
     if(!container) return;
 
-    // 날짜별 정렬 (getTime 사용으로 모바일 호환성 강화)
     const sortedStays = [...(appState.stays || [])].sort((a, b) => {
         if (!a.checkInDate) return 1;
         if (!b.checkInDate) return -1;
@@ -240,19 +257,33 @@ window.openEditModal = (type, stayId = null) => {
             </div>
         `;
     } else if (type === 'flight') {
-        title.innerText = '항공편 정보 수정';
+        title.innerText = '항공편 정보 수정 (왕복)';
         const f = appState.flight || defaultState.flight;
+        const out = f.outbound || defaultState.flight.outbound;
+        const ret = f.return || defaultState.flight.return;
+        
         body.innerHTML = `
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div><label class="label">출발지 (코드)</label><input type="text" id="edit-deptCode" value="${f.deptCode || ''}"></div>
-                <div><label class="label">도착지 (코드)</label><input type="text" id="edit-arrCode" value="${f.arrCode || ''}"></div>
-                <div><label class="label">출발지 (공항명)</label><input type="text" id="edit-deptName" value="${f.deptName || ''}"></div>
-                <div><label class="label">도착지 (공항명)</label><input type="text" id="edit-arrName" value="${f.arrName || ''}"></div>
-                <div><label class="label">출발 시간</label><input type="text" id="edit-deptTime" value="${f.deptTime || ''}"></div>
-                <div><label class="label">도착 시간</label><input type="text" id="edit-arrTime" value="${f.arrTime || ''}"></div>
-                <div><label class="label">편명</label><input type="text" id="edit-flightNo" value="${f.flightNo || ''}"></div>
-                <div><label class="label">탑승 위치 (게이트)</label><input type="text" id="edit-gate" value="${f.gate || ''}"></div>
-                <div style="grid-column: span 2;"><label class="label">날짜</label><input type="text" id="edit-date" value="${f.date || ''}"></div>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                <h4 style="color: var(--primary); margin-bottom: 10px;"><i class="fas fa-plane-departure"></i> 출국편 (Outbound)</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div><label class="label">출발지 코드</label><input type="text" id="edit-out-deptCode" value="${out.deptCode || ''}"></div>
+                    <div><label class="label">도착지 코드</label><input type="text" id="edit-out-arrCode" value="${out.arrCode || ''}"></div>
+                    <div><label class="label">편명</label><input type="text" id="edit-out-flightNo" value="${out.flightNo || ''}"></div>
+                    <div><label class="label">날짜</label><input type="text" id="edit-out-date" value="${out.date || ''}"></div>
+                    <div><label class="label">출발 시간</label><input type="text" id="edit-out-deptTime" value="${out.deptTime || ''}"></div>
+                    <div><label class="label">게이트</label><input type="text" id="edit-out-gate" value="${out.gate || ''}"></div>
+                </div>
+            </div>
+            <div style="background: #eef7ff; padding: 15px; border-radius: 12px;">
+                <h4 style="color: #3498db; margin-bottom: 10px;"><i class="fas fa-plane-arrival"></i> 귀국편 (Return)</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div><label class="label">출발지 코드</label><input type="text" id="edit-ret-deptCode" value="${ret.deptCode || ''}"></div>
+                    <div><label class="label">도착지 코드</label><input type="text" id="edit-ret-arrCode" value="${ret.arrCode || ''}"></div>
+                    <div><label class="label">편명</label><input type="text" id="edit-ret-flightNo" value="${ret.flightNo || ''}"></div>
+                    <div><label class="label">날짜</label><input type="text" id="edit-ret-date" value="${ret.date || ''}"></div>
+                    <div><label class="label">출발 시간</label><input type="text" id="edit-ret-deptTime" value="${ret.deptTime || ''}"></div>
+                    <div><label class="label">게이트</label><input type="text" id="edit-ret-gate" value="${ret.gate || ''}"></div>
+                </div>
             </div>
         `;
     } else if (type === 'rental') {
@@ -305,16 +336,28 @@ window.saveEdit = () => {
             appState.tripDateRange = calculateDuration(appState.tripStartDate, appState.tripEndDate);
         } else if (currentEditType === 'flight') {
             appState.flight = {
-                deptCode: document.getElementById('edit-deptCode').value,
-                arrCode: document.getElementById('edit-arrCode').value,
-                deptName: document.getElementById('edit-deptName').value,
-                arrName: document.getElementById('edit-arrName').value,
-                deptTime: document.getElementById('edit-deptTime').value,
-                arrTime: document.getElementById('edit-arrTime').value,
-                flightNo: document.getElementById('edit-flightNo').value,
-                gate: document.getElementById('edit-gate').value,
-                date: document.getElementById('edit-date').value,
-                duration: (appState.flight && appState.flight.duration) || '2h 10m'
+                outbound: {
+                    deptCode: document.getElementById('edit-out-deptCode').value,
+                    arrCode: document.getElementById('edit-out-arrCode').value,
+                    flightNo: document.getElementById('edit-out-flightNo').value,
+                    date: document.getElementById('edit-out-date').value,
+                    deptTime: document.getElementById('edit-out-deptTime').value,
+                    gate: document.getElementById('edit-out-gate').value,
+                    deptName: appState.flight.outbound.deptName || '인천',
+                    arrName: appState.flight.outbound.arrName || '간사이',
+                    duration: appState.flight.outbound.duration || '2h 10m'
+                },
+                return: {
+                    deptCode: document.getElementById('edit-ret-deptCode').value,
+                    arrCode: document.getElementById('edit-ret-arrCode').value,
+                    flightNo: document.getElementById('edit-ret-flightNo').value,
+                    date: document.getElementById('edit-ret-date').value,
+                    deptTime: document.getElementById('edit-ret-deptTime').value,
+                    gate: document.getElementById('edit-ret-gate').value,
+                    deptName: appState.flight.return.deptName || '간사이',
+                    arrName: appState.flight.return.arrName || '인천',
+                    duration: appState.flight.return.duration || '1h 50m'
+                }
             };
         } else if (currentEditType === 'rental') {
             appState.rental = {
