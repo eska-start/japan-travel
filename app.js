@@ -17,11 +17,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// --- State Management ---
-const getTripId = () => window.location.hash.substring(1) || 'default-trip';
-const tripRef = ref(db, 'trips/' + getTripId());
-
-let appState = {
+// --- Default State ---
+const defaultState = {
     tripTag: 'OSAKA & KYOTO 2024',
     tripTitle: '오사카 & 교토 힐링 여행',
     tripDateRange: '2024.10.15 - 2024.10.22 (7박 8일)',
@@ -50,6 +47,11 @@ let appState = {
     ]
 };
 
+// --- State Management ---
+const getTripId = () => window.location.hash.substring(1) || 'default-trip';
+const tripRef = ref(db, 'trips/' + getTripId());
+
+let appState = { ...defaultState };
 let currentEditType = null;
 let currentStayId = null;
 
@@ -66,13 +68,13 @@ function renderTitle() {
     const tagEl = document.getElementById('main-tag');
     const titleEl = document.getElementById('main-title');
     const dateEl = document.getElementById('main-date');
-    if (tagEl) tagEl.innerText = appState.tripTag || 'TRAVEL';
-    if (titleEl) titleEl.innerText = appState.tripTitle || '나의 여행 계획';
-    if (dateEl) dateEl.innerHTML = `<i class="far fa-calendar"></i> ${appState.tripDateRange || '날짜를 입력해 주세요'}`;
+    if (tagEl) tagEl.innerText = appState.tripTag || defaultState.tripTag;
+    if (titleEl) titleEl.innerText = appState.tripTitle || defaultState.tripTitle;
+    if (dateEl) dateEl.innerHTML = `<i class="far fa-calendar"></i> ${appState.tripDateRange || defaultState.tripDateRange}`;
 }
 
 function renderFlight() {
-    const f = appState.flight || {};
+    const f = appState.flight || defaultState.flight;
     const container = document.getElementById('flight-display');
     if(!container) return;
     container.innerHTML = `
@@ -107,7 +109,7 @@ function renderFlight() {
 }
 
 function renderRental() {
-    const r = appState.rental || {};
+    const r = appState.rental || defaultState.rental;
     const container = document.getElementById('rental-display');
     if(!container) return;
     container.innerHTML = `
@@ -185,10 +187,10 @@ window.openEditModal = (type, stayId = null) => {
     modal.style.display = 'flex';
     body.innerHTML = '';
 
-    if (type === 'title' || type === 'title') { // title or legacy title
-        title.innerText = '여행 대제목 수정';
+    if (type === 'title') {
+        title.innerText = '여행 대제목 및 정보 수정';
         body.innerHTML = `
-            <label class="label">상단 태그</label><input type="text" id="edit-tripTag" value="${appState.tripTag || ''}">
+            <label class="label">상단 태그 (영문)</label><input type="text" id="edit-tripTag" value="${appState.tripTag || ''}">
             <label class="label">여행 제목</label><input type="text" id="edit-tripTitle" value="${appState.tripTitle || ''}">
             <label class="label">여행 기간</label><input type="text" id="edit-tripDateRange" value="${appState.tripDateRange || ''}">
         `;
@@ -284,8 +286,8 @@ window.saveEdit = () => {
         saveToFirebase();
         closeEditModal();
     } catch (e) {
-        console.error("저장 중 오류 발생:", e);
-        alert("정보 저장에 실패했습니다. 다시 시도해 주세요.");
+        console.error("저장 오류:", e);
+        alert("정보 저장에 실패했습니다.");
     }
 }
 
@@ -339,8 +341,8 @@ async function updateExchangeRate() {
         const response = await fetch('https://open.er-api.com/v6/latest/JPY');
         const data = await response.json();
         const krwRate = data.rates.KRW;
-        rateEl.innerHTML = `100 JPY = <span style="color: var(--primary);">${(krwRate * 100).toFixed(2)}</span> KRW`;
-        updateEl.innerText = `마지막 업데이트: ${new Date().toLocaleTimeString()}`;
+        if(rateEl) rateEl.innerHTML = `100 JPY = <span style="color: var(--primary);">${(krwRate * 100).toFixed(2)}</span> KRW`;
+        if(updateEl) updateEl.innerText = `마지막 업데이트: ${new Date().toLocaleTimeString()}`;
     } catch (error) {
         if(rateEl) rateEl.innerText = '환율 정보 로드 실패';
     }
@@ -359,11 +361,8 @@ function loadFromFirebase() {
     onValue(tripRef, (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            appState = data;
-            // Ensure essential structures exist
-            if(!appState.stays) appState.stays = [];
-            if(!appState.flight) appState.flight = {};
-            if(!appState.rental) appState.rental = {};
+            // Merge with defaults to ensure new fields (tripTitle, tripTag) exist
+            appState = { ...defaultState, ...data };
             renderAll();
         } else {
             saveToFirebase();
