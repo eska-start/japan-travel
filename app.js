@@ -188,21 +188,13 @@ window.openEditModal = (type, stayId = null) => {
     body.innerHTML = '';
 
     if (type === 'title') {
-        title.innerText = '여행 대제목 및 일정 수정';
+        title.innerText = '여행 제목 및 정보 수정';
         body.innerHTML = `
-            <label class="label">상단 태그 (영문)</label>
-            <input type="text" id="edit-tripTag" value="${appState.tripTag || ''}">
-            <label class="label">여행 제목</label>
-            <input type="text" id="edit-tripTitle" value="${appState.tripTitle || ''}">
+            <label class="label">상단 태그 (영문)</label><input type="text" id="edit-tripTag" value="${appState.tripTag || ''}">
+            <label class="label">여행 제목</label><input type="text" id="edit-tripTitle" value="${appState.tripTitle || ''}">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div>
-                    <label class="label">여행 시작일</label>
-                    <input type="date" id="edit-tripStartDate" value="${appState.tripStartDate || ''}">
-                </div>
-                <div>
-                    <label class="label">여행 종료일</label>
-                    <input type="date" id="edit-tripEndDate" value="${appState.tripEndDate || ''}">
-                </div>
+                <div><label class="label">시작일</label><input type="date" id="edit-tripStartDate" value="${appState.tripStartDate || ''}"></div>
+                <div><label class="label">종료일</label><input type="date" id="edit-tripEndDate" value="${appState.tripEndDate || ''}"></div>
             </div>
         `;
     } else if (type === 'flight') {
@@ -217,7 +209,8 @@ window.openEditModal = (type, stayId = null) => {
                 <div><label class="label">출발 시간</label><input type="text" id="edit-deptTime" value="${f.deptTime || ''}"></div>
                 <div><label class="label">도착 시간</label><input type="text" id="edit-arrTime" value="${f.arrTime || ''}"></div>
                 <div><label class="label">편명</label><input type="text" id="edit-flightNo" value="${f.flightNo || ''}"></div>
-                <div><label class="label">날짜</label><input type="text" id="edit-date" value="${f.date || ''}"></div>
+                <div><label class="label">탑승 위치 (게이트)</label><input type="text" id="edit-gate" value="${f.gate || ''}"></div>
+                <div style="grid-column: span 2;"><label class="label">날짜</label><input type="text" id="edit-date" value="${f.date || ''}"></div>
             </div>
         `;
     } else if (type === 'rental') {
@@ -276,9 +269,9 @@ window.saveEdit = () => {
                 deptTime: document.getElementById('edit-deptTime').value,
                 arrTime: document.getElementById('edit-arrTime').value,
                 flightNo: document.getElementById('edit-flightNo').value,
+                gate: document.getElementById('edit-gate').value,
                 date: document.getElementById('edit-date').value,
-                duration: (appState.flight && appState.flight.duration) || '2h 10m',
-                gate: (appState.flight && appState.flight.gate) || '게이트 정보'
+                duration: (appState.flight && appState.flight.duration) || '2h 10m'
             };
         } else if (currentEditType === 'rental') {
             appState.rental = {
