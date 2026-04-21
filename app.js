@@ -223,39 +223,61 @@ function renderStays() {
     const container = document.getElementById('stay-container');
     if(!container) return;
 
+    const tripStart = appState.tripStartDate ? new Date(appState.tripStartDate) : null;
+
     const sortedStays = [...(appState.stays || [])].sort((a, b) => {
         if (!a.checkInDate) return 1;
         if (!b.checkInDate) return -1;
         return new Date(a.checkInDate).getTime() - new Date(b.checkInDate).getTime();
     });
 
-    container.innerHTML = sortedStays.map(stay => `
+    container.innerHTML = sortedStays.map(stay => {
+        let nightsText = "";
+        let daysText = "날짜 미지정";
+        
+        if (stay.checkInDate && stay.checkOutDate) {
+            const cin = new Date(stay.checkInDate);
+            const cout = new Date(stay.checkOutDate);
+            const diffTime = cout - cin;
+            const nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (nights > 0) nightsText = `${nights}박 ${nights + 1}일`;
+            
+            if (tripStart) {
+                const startDay = Math.ceil((cin - tripStart) / (1000 * 60 * 60 * 24)) + 1;
+                const endDay = startDay + nights;
+                daysText = startDay === endDay ? `${startDay}일차` : `${startDay}~${endDay}일차`;
+            }
+        }
+
+        return `
         <div class="card" id="stay-${stay.id}" style="margin-bottom: 2rem;">
             <div class="flex-between">
-                <div>
-                    <h3 style="font-size: 1.2rem; margin-bottom: 5px;">${stay.name || '미지정 숙소'}</h3>
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <span class="tag" style="background: var(--accent);">${daysText}</span>
+                        ${nightsText ? `<span class="tag" style="background: #546de5;">${nightsText}</span>` : ''}
+                    </div>
+                    <h3 style="font-size: 1.3rem; margin-bottom: 5px;">${stay.name || '미지정 숙소'}</h3>
                     <p style="color: var(--text-sub); font-size: 0.9rem;"><i class="fas fa-map-marker-alt"></i> ${stay.address || '주소 없음'}</p>
                 </div>
-                <div style="text-align: right;">
-                    <span class="tag">${stay.days || 'Day -'}</span>
-                    <div style="font-size: 0.8rem; margin-top: 10px; color: var(--text-sub);">
+                <div style="text-align: right; min-width: 120px;">
+                    <div style="font-size: 0.8rem; color: var(--text-sub);">
                         <p><strong>입실:</strong> ${stay.checkInDate || '-'} ${stay.checkInTime || ''}</p>
                         <p><strong>퇴실:</strong> ${stay.checkOutDate || '-'} ${stay.checkOutTime || ''}</p>
                     </div>
-                    <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: flex-end;">
-                        <i class="fas fa-edit" style="color: var(--text-sub); cursor: pointer;" onclick="openEditModal('stay', '${stay.id}')"></i>
-                        <i class="fas fa-trash" style="color: #ff7675; cursor: pointer;" onclick="deleteStay('${stay.id}')"></i>
+                    <div style="margin-top: 15px; display: flex; gap: 12px; justify-content: flex-end;">
+                        <i class="fas fa-edit" style="color: var(--text-sub); cursor: pointer; font-size: 1.1rem;" onclick="openEditModal('stay', '${stay.id}')"></i>
+                        <i class="fas fa-trash" style="color: #ff7675; cursor: pointer; font-size: 1.1rem;" onclick="deleteStay('${stay.id}')"></i>
                     </div>
                 </div>
             </div>
             
-            <div class="actions" style="margin-top: 1rem;">
-                <button class="btn-map" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stay.name)}')">
-                    <i class="fas fa-map"></i> 구글 지도 보기
+            <div class="actions" style="margin-top: 1.5rem; display: flex; gap: 10px;">
+                <button class="btn-map" style="flex: 1;" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stay.name + ' ' + stay.address)}')">
+                    <i class="fas fa-map-marked-alt"></i> 구글 지도에서 위치 확인
                 </button>
             </div>
 
-            <!-- 세부 일정 리스트 (여기가 중요!) -->
             <div class="sub-itinerary-list" id="sub-list-${stay.id}" style="margin-top: 1.5rem; border-left: 2px solid #eee; padding-left: 1rem;">
                 ${(stay.subItems || []).map(item => `
                     <div class="sub-item" style="padding: 10px; background: #f8f9fa; border-radius: 8px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
@@ -271,7 +293,8 @@ function renderStays() {
                 <i class="fas fa-plus"></i> 세부 일정 추가
             </button>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // --- Modal Functions ---
@@ -334,7 +357,9 @@ window.openEditModal = (type, stayId = null) => {
             <label class="label">주소</label><input type="text" id="edit-stayAddress" value="${stay ? stay.address : ''}">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div><label class="label">입실 날짜</label><input type="date" id="edit-stayCheckInDate" value="${stay ? stay.checkInDate : ''}"></div>
+                <div><label class="label">입실 시간</label><input type="time" id="edit-stayCheckInTime" value="${stay ? stay.checkInTime : ''}"></div>
                 <div><label class="label">퇴실 날짜</label><input type="date" id="edit-stayCheckOutDate" value="${stay ? stay.checkOutDate : ''}"></div>
+                <div><label class="label">퇴실 시간</label><input type="time" id="edit-stayCheckOutTime" value="${stay ? stay.checkOutTime : ''}"></div>
             </div>
         `;
     }
@@ -377,7 +402,9 @@ window.saveEdit = () => {
             name: document.getElementById('edit-stayName').value,
             address: document.getElementById('edit-stayAddress').value,
             checkInDate: document.getElementById('edit-stayCheckInDate').value,
+            checkInTime: document.getElementById('edit-stayCheckInTime').value,
             checkOutDate: document.getElementById('edit-stayCheckOutDate').value,
+            checkOutTime: document.getElementById('edit-stayCheckOutTime').value,
         };
         if (currentStayId) {
             const idx = appState.stays.findIndex(s => s.id == currentStayId);
