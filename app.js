@@ -13,7 +13,6 @@ const firebaseConfig = {
     measurementId: "G-81GHFH9Z2E"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
@@ -21,6 +20,8 @@ const db = getDatabase(app);
 const defaultState = {
     tripTag: 'OSAKA & KYOTO 2024',
     tripTitle: '오사카 & 교토 힐링 여행',
+    tripStartDate: '2024-10-15',
+    tripEndDate: '2024-10-22',
     tripDateRange: '2024.10.15 - 2024.10.22 (7박 8일)',
     flight: {
         deptCode: 'ICN', deptName: '인천 국제공항', deptTime: '10:30 AM',
@@ -47,7 +48,6 @@ const defaultState = {
     ]
 };
 
-// --- State Management ---
 const getTripId = () => window.location.hash.substring(1) || 'default-trip';
 const tripRef = ref(db, 'trips/' + getTripId());
 
@@ -188,11 +188,22 @@ window.openEditModal = (type, stayId = null) => {
     body.innerHTML = '';
 
     if (type === 'title') {
-        title.innerText = '여행 대제목 및 정보 수정';
+        title.innerText = '여행 대제목 및 일정 수정';
         body.innerHTML = `
-            <label class="label">상단 태그 (영문)</label><input type="text" id="edit-tripTag" value="${appState.tripTag || ''}">
-            <label class="label">여행 제목</label><input type="text" id="edit-tripTitle" value="${appState.tripTitle || ''}">
-            <label class="label">여행 기간</label><input type="text" id="edit-tripDateRange" value="${appState.tripDateRange || ''}">
+            <label class="label">상단 태그 (영문)</label>
+            <input type="text" id="edit-tripTag" value="${appState.tripTag || ''}">
+            <label class="label">여행 제목</label>
+            <input type="text" id="edit-tripTitle" value="${appState.tripTitle || ''}">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <label class="label">여행 시작일</label>
+                    <input type="date" id="edit-tripStartDate" value="${appState.tripStartDate || ''}">
+                </div>
+                <div>
+                    <label class="label">여행 종료일</label>
+                    <input type="date" id="edit-tripEndDate" value="${appState.tripEndDate || ''}">
+                </div>
+            </div>
         `;
     } else if (type === 'flight') {
         title.innerText = '항공편 정보 수정';
@@ -238,12 +249,24 @@ window.closeEditModal = () => {
     document.getElementById('editModal').style.display = 'none';
 }
 
+function calculateDuration(start, end) {
+    if (!start || !end) return '';
+    const d1 = new Date(start);
+    const d2 = new Date(end);
+    const diff = d2.getTime() - d1.getTime();
+    const nights = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    if (nights < 0) return '';
+    return `${start.replace(/-/g, '.')} - ${end.replace(/-/g, '.')} (${nights}박 ${nights + 1}일)`;
+}
+
 window.saveEdit = () => {
     try {
         if (currentEditType === 'title') {
             appState.tripTag = document.getElementById('edit-tripTag').value;
             appState.tripTitle = document.getElementById('edit-tripTitle').value;
-            appState.tripDateRange = document.getElementById('edit-tripDateRange').value;
+            appState.tripStartDate = document.getElementById('edit-tripStartDate').value;
+            appState.tripEndDate = document.getElementById('edit-tripEndDate').value;
+            appState.tripDateRange = calculateDuration(appState.tripStartDate, appState.tripEndDate);
         } else if (currentEditType === 'flight') {
             appState.flight = {
                 deptCode: document.getElementById('edit-deptCode').value,
@@ -361,7 +384,6 @@ function loadFromFirebase() {
     onValue(tripRef, (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            // Merge with defaults to ensure new fields (tripTitle, tripTag) exist
             appState = { ...defaultState, ...data };
             renderAll();
         } else {
