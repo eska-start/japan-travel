@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Japan Odyssey - 일본 여행 플래너</title>
-    <link rel="stylesheet" href="style.css?v=3.7">
+    <link rel="stylesheet" href="style.css?v=3.8">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
         <!-- 사이드바 -->
         <aside>
             <div class="logo" style="font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-bottom: 3rem;">
-                <i class="fas fa-torii-gate"></i> JAPAN ODYSSEY <span style="font-size: 0.7rem; vertical-align: middle; opacity: 0.5;">v3.7</span>
+                <i class="fas fa-torii-gate"></i> JAPAN ODYSSEY <span style="font-size: 0.7rem; vertical-align: middle; opacity: 0.5;">v3.8</span>
             </div>
             <nav>
                 <ul style="list-style: none;">
@@ -45,13 +45,11 @@
                 <div class="hero-banner">
                     <div class="hero-content">
                         <span id="main-tag" class="tag" style="margin-bottom: 10px; display: inline-block;">TOKYO & KYOTO 2024</span>
-                        <div style="position: relative; padding-right: 50px;">
-                            <h1 id="main-title" style="margin: 0; line-height: 1.2;">오사카 & 교토 힐링 여행</h1>
-                            <div class="edit-trigger" onclick="openEditModal('title')" style="position: absolute; top: 0; right: 0; background: rgba(255,255,255,0.1); width: 40px; height: 40px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-edit" style="font-size: 1.2rem; opacity: 0.9;"></i>
-                            </div>
-                        </div>
-                        <p id="main-date" style="margin-top: 15px;"><i class="far fa-calendar"></i> 2024.10.15 - 2024.10.22 (7박 8일)</p>
+                        <h1 id="main-title" style="margin: 0; line-height: 1.2;">오사카 & 교토 힐링 여행</h1>
+                        <p id="main-date" style="margin-top: 15px; margin-bottom: 15px;"><i class="far fa-calendar"></i> 2024.10.15 - 2024.10.22 (7박 8일)</p>
+                        <button class="btn-map" style="margin-top: 0; width: auto; padding: 8px 15px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); font-size: 0.85rem;" onclick="openEditModal('title')">
+                            <i class="fas fa-edit"></i> 제목 및 기간 수정
+                        </button>
                     </div>
                 </div>
                 
@@ -149,6 +147,6 @@
         <span id="sync-text">연결 확인 중...</span>
     </div>
 
-    <script type="module" src="app.js?v=3.7"></script>
+    <script type="module" src="app.js?v=3.8"></script>
 </body>
 </html>
