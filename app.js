@@ -67,62 +67,62 @@ function renderTitle() {
     const titleEl = document.getElementById('main-title');
     const dateEl = document.getElementById('main-date');
     if (tagEl) tagEl.innerText = appState.tripTag || 'TRAVEL';
-    if (titleEl) titleEl.innerText = appState.tripTitle || '나의 일본 여행';
-    if (dateEl) dateEl.innerHTML = `<i class="far fa-calendar"></i> ${appState.tripDateRange || '날짜를 설정해 주세요'}`;
+    if (titleEl) titleEl.innerText = appState.tripTitle || '나의 여행 계획';
+    if (dateEl) dateEl.innerHTML = `<i class="far fa-calendar"></i> ${appState.tripDateRange || '날짜를 입력해 주세요'}`;
 }
 
 function renderFlight() {
-    const f = appState.flight;
+    const f = appState.flight || {};
     const container = document.getElementById('flight-display');
     if(!container) return;
     container.innerHTML = `
         <div class="flight-info">
             <div class="departure">
-                <div class="airport-code">${f.deptCode}</div>
-                <div class="airport-name">${f.deptName}</div>
-                <div class="time">${f.deptTime}</div>
+                <div class="airport-code">${f.deptCode || '-'}</div>
+                <div class="airport-name">${f.deptName || '-'}</div>
+                <div class="time">${f.deptTime || '-'}</div>
             </div>
             <div class="flight-path">
-                <span>${f.flightNo}</span>
+                <span>${f.flightNo || '-'}</span>
                 <div class="plane-icon"><i class="fas fa-plane"></i></div>
-                <span>${f.duration}</span>
+                <span>${f.duration || '-'}</span>
             </div>
             <div class="arrival">
-                <div class="airport-code">${f.arrCode}</div>
-                <div class="airport-name">${f.arrName}</div>
-                <div class="time">${f.arrTime}</div>
+                <div class="airport-code">${f.arrCode || '-'}</div>
+                <div class="airport-name">${f.arrName || '-'}</div>
+                <div class="time">${f.arrTime || '-'}</div>
             </div>
         </div>
         <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; display: flex; gap: 20px;">
             <div class="info-item">
                 <span class="label">탑승 위치</span>
-                <span class="value">${f.gate}</span>
+                <span class="value">${f.gate || '-'}</span>
             </div>
             <div class="info-item">
                 <span class="label">날짜</span>
-                <span class="value">${f.date}</span>
+                <span class="value">${f.date || '-'}</span>
             </div>
         </div>
     `;
 }
 
 function renderRental() {
-    const r = appState.rental;
+    const r = appState.rental || {};
     const container = document.getElementById('rental-display');
     if(!container) return;
     container.innerHTML = `
         <div class="info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
             <div class="info-item">
                 <span class="label">빌리는 시간</span>
-                <span class="value">${r.pickTime}</span>
+                <span class="value">${r.pickTime || '-'}</span>
             </div>
             <div class="info-item">
                 <span class="label">반납 장소</span>
-                <span class="value">${r.returnPlace}</span>
+                <span class="value">${r.returnPlace || '-'}</span>
             </div>
             <div class="info-item">
                 <span class="label">차량 정보</span>
-                <span class="value">${r.carInfo}</span>
+                <span class="value">${r.carInfo || '-'}</span>
             </div>
         </div>
     `;
@@ -135,14 +135,14 @@ function renderStays() {
         <div class="card" id="stay-${stay.id}">
             <div class="flex-between">
                 <div>
-                    <h3 style="font-size: 1.2rem; margin-bottom: 5px;">${stay.name}</h3>
-                    <p style="color: var(--text-sub); font-size: 0.9rem;"><i class="fas fa-map-marker-alt"></i> ${stay.address}</p>
+                    <h3 style="font-size: 1.2rem; margin-bottom: 5px;">${stay.name || '미지정 숙소'}</h3>
+                    <p style="color: var(--text-sub); font-size: 0.9rem;"><i class="fas fa-map-marker-alt"></i> ${stay.address || '주소 없음'}</p>
                 </div>
                 <div style="text-align: right;">
-                    <span class="tag">${stay.days}</span>
+                    <span class="tag">${stay.days || 'Day -'}</span>
                     <div style="font-size: 0.8rem; margin-top: 10px; color: var(--text-sub);">
-                        <p><strong>입실:</strong> ${stay.checkInDate} ${stay.checkInTime}</p>
-                        <p><strong>퇴실:</strong> ${stay.checkOutDate} ${stay.checkOutTime}</p>
+                        <p><strong>입실:</strong> ${stay.checkInDate || '-'} ${stay.checkInTime || ''}</p>
+                        <p><strong>퇴실:</strong> ${stay.checkOutDate || '-'} ${stay.checkOutTime || ''}</p>
                     </div>
                     <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: flex-end;">
                         <i class="fas fa-edit" style="color: var(--text-sub); cursor: pointer;" onclick="openEditModal('stay', '${stay.id}')"></i>
@@ -185,43 +185,43 @@ window.openEditModal = (type, stayId = null) => {
     modal.style.display = 'flex';
     body.innerHTML = '';
 
-    if (type === 'title') {
-        title.innerText = '여행 제목 및 정보 수정';
+    if (type === 'title' || type === 'title') { // title or legacy title
+        title.innerText = '여행 대제목 수정';
         body.innerHTML = `
-            <label class="label">상단 태그 (영문 추천)</label><input type="text" id="edit-tripTag" value="${appState.tripTag || ''}" placeholder="예: TOKYO 2024">
-            <label class="label">여행 제목</label><input type="text" id="edit-tripTitle" value="${appState.tripTitle || ''}" placeholder="예: 오사카 힐링 여행">
-            <label class="label">여행 기간</label><input type="text" id="edit-tripDateRange" value="${appState.tripDateRange || ''}" placeholder="예: 2024.10.15 - 10.22">
+            <label class="label">상단 태그</label><input type="text" id="edit-tripTag" value="${appState.tripTag || ''}">
+            <label class="label">여행 제목</label><input type="text" id="edit-tripTitle" value="${appState.tripTitle || ''}">
+            <label class="label">여행 기간</label><input type="text" id="edit-tripDateRange" value="${appState.tripDateRange || ''}">
         `;
     } else if (type === 'flight') {
         title.innerText = '항공편 정보 수정';
-        const f = appState.flight;
+        const f = appState.flight || {};
         body.innerHTML = `
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div><label class="label">출발지 (코드)</label><input type="text" id="edit-deptCode" value="${f.deptCode}"></div>
-                <div><label class="label">도착지 (코드)</label><input type="text" id="edit-arrCode" value="${f.arrCode}"></div>
-                <div><label class="label">출발지 (명칭)</label><input type="text" id="edit-deptName" value="${f.deptName}"></div>
-                <div><label class="label">도착지 (명칭)</label><input type="text" id="edit-arrName" value="${f.arrName}"></div>
-                <div><label class="label">출발 시간</label><input type="text" id="edit-deptTime" value="${f.deptTime}"></div>
-                <div><label class="label">도착 시간</label><input type="text" id="edit-arrTime" value="${f.arrTime}"></div>
-                <div><label class="label">편명</label><input type="text" id="edit-flightNo" value="${f.flightNo}"></div>
-                <div><label class="label">날짜</label><input type="text" id="edit-date" value="${f.date}"></div>
+                <div><label class="label">출발지 (코드)</label><input type="text" id="edit-deptCode" value="${f.deptCode || ''}"></div>
+                <div><label class="label">도착지 (코드)</label><input type="text" id="edit-arrCode" value="${f.arrCode || ''}"></div>
+                <div><label class="label">출발지 (명칭)</label><input type="text" id="edit-deptName" value="${f.deptName || ''}"></div>
+                <div><label class="label">도착지 (명칭)</label><input type="text" id="edit-arrName" value="${f.arrName || ''}"></div>
+                <div><label class="label">출발 시간</label><input type="text" id="edit-deptTime" value="${f.deptTime || ''}"></div>
+                <div><label class="label">도착 시간</label><input type="text" id="edit-arrTime" value="${f.arrTime || ''}"></div>
+                <div><label class="label">편명</label><input type="text" id="edit-flightNo" value="${f.flightNo || ''}"></div>
+                <div><label class="label">날짜</label><input type="text" id="edit-date" value="${f.date || ''}"></div>
             </div>
         `;
     } else if (type === 'rental') {
         title.innerText = '렌트카 정보 수정';
-        const r = appState.rental;
+        const r = appState.rental || {};
         body.innerHTML = `
-            <label class="label">빌리는 시간</label><input type="text" id="edit-pickTime" value="${r.pickTime}">
-            <label class="label">반납 장소</label><input type="text" id="edit-returnPlace" value="${r.returnPlace}">
-            <label class="label">차량 정보</label><input type="text" id="edit-carInfo" value="${r.carInfo}">
+            <label class="label">빌리는 시간</label><input type="text" id="edit-pickTime" value="${r.pickTime || ''}">
+            <label class="label">반납 장소</label><input type="text" id="edit-returnPlace" value="${r.returnPlace || ''}">
+            <label class="label">차량 정보</label><input type="text" id="edit-carInfo" value="${r.carInfo || ''}">
         `;
     } else if (type === 'stay') {
         const stay = stayId ? appState.stays.find(s => s.id == stayId) : null;
         title.innerText = stay ? '숙소 정보 수정' : '새 숙소 추가';
         body.innerHTML = `
-            <label class="label">숙소 이름</label><input type="text" id="edit-stayName" value="${stay ? stay.name : ''}" placeholder="예: 소테츠 프레사 인">
-            <label class="label">주소</label><input type="text" id="edit-stayAddress" value="${stay ? stay.address : ''}" placeholder="구글 지도 검색용 주소">
-            <label class="label">기간 (예: Day 1 - Day 3)</label><input type="text" id="edit-stayDays" value="${stay ? stay.days : ''}" placeholder="Day 1 - Day 3">
+            <label class="label">숙소 이름</label><input type="text" id="edit-stayName" value="${stay ? stay.name : ''}">
+            <label class="label">주소</label><input type="text" id="edit-stayAddress" value="${stay ? stay.address : ''}">
+            <label class="label">기간</label><input type="text" id="edit-stayDays" value="${stay ? stay.days : ''}">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div><label class="label">입실 날짜</label><input type="date" id="edit-stayCheckInDate" value="${stay ? stay.checkInDate : ''}" onchange="handleCheckInChange(this.value)"></div>
                 <div><label class="label">입실 시간</label><input type="time" id="edit-stayCheckInTime" value="${stay ? stay.checkInTime : ''}"></div>
@@ -237,50 +237,56 @@ window.closeEditModal = () => {
 }
 
 window.saveEdit = () => {
-    if (currentEditType === 'title') {
-        appState.tripTag = document.getElementById('edit-tripTag').value;
-        appState.tripTitle = document.getElementById('edit-tripTitle').value;
-        appState.tripDateRange = document.getElementById('edit-tripDateRange').value;
-    } else if (currentEditType === 'flight') {
-        appState.flight = {
-            deptCode: document.getElementById('edit-deptCode').value,
-            arrCode: document.getElementById('edit-arrCode').value,
-            deptName: document.getElementById('edit-deptName').value,
-            arrName: document.getElementById('edit-arrName').value,
-            deptTime: document.getElementById('edit-deptTime').value,
-            arrTime: document.getElementById('edit-arrTime').value,
-            flightNo: document.getElementById('edit-flightNo').value,
-            date: document.getElementById('edit-date').value,
-            duration: appState.flight.duration, gate: appState.flight.gate
-        };
-    } else if (currentEditType === 'rental') {
-        appState.rental = {
-            pickTime: document.getElementById('edit-pickTime').value,
-            returnPlace: document.getElementById('edit-returnPlace').value,
-            carInfo: document.getElementById('edit-carInfo').value
-        };
-    } else if (currentEditType === 'stay') {
-        const stayData = {
-            name: document.getElementById('edit-stayName').value,
-            address: document.getElementById('edit-stayAddress').value,
-            days: document.getElementById('edit-stayDays').value,
-            checkInDate: document.getElementById('edit-stayCheckInDate').value,
-            checkInTime: document.getElementById('edit-stayCheckInTime').value,
-            checkOutDate: document.getElementById('edit-stayCheckOutDate').value,
-            checkOutTime: document.getElementById('edit-stayCheckOutTime').value,
-        };
+    try {
+        if (currentEditType === 'title') {
+            appState.tripTag = document.getElementById('edit-tripTag').value;
+            appState.tripTitle = document.getElementById('edit-tripTitle').value;
+            appState.tripDateRange = document.getElementById('edit-tripDateRange').value;
+        } else if (currentEditType === 'flight') {
+            appState.flight = {
+                deptCode: document.getElementById('edit-deptCode').value,
+                arrCode: document.getElementById('edit-arrCode').value,
+                deptName: document.getElementById('edit-deptName').value,
+                arrName: document.getElementById('edit-arrName').value,
+                deptTime: document.getElementById('edit-deptTime').value,
+                arrTime: document.getElementById('edit-arrTime').value,
+                flightNo: document.getElementById('edit-flightNo').value,
+                date: document.getElementById('edit-date').value,
+                duration: (appState.flight && appState.flight.duration) || '2h 10m',
+                gate: (appState.flight && appState.flight.gate) || '게이트 정보'
+            };
+        } else if (currentEditType === 'rental') {
+            appState.rental = {
+                pickTime: document.getElementById('edit-pickTime').value,
+                returnPlace: document.getElementById('edit-returnPlace').value,
+                carInfo: document.getElementById('edit-carInfo').value
+            };
+        } else if (currentEditType === 'stay') {
+            const stayData = {
+                name: document.getElementById('edit-stayName').value,
+                address: document.getElementById('edit-stayAddress').value,
+                days: document.getElementById('edit-stayDays').value,
+                checkInDate: document.getElementById('edit-stayCheckInDate').value,
+                checkInTime: document.getElementById('edit-stayCheckInTime').value,
+                checkOutDate: document.getElementById('edit-stayCheckOutDate').value,
+                checkOutTime: document.getElementById('edit-stayCheckOutTime').value,
+            };
 
-        if (currentStayId) {
-            const index = appState.stays.findIndex(s => s.id == currentStayId);
-            if (index !== -1) appState.stays[index] = { ...appState.stays[index], ...stayData };
-        } else {
-            if(!appState.stays) appState.stays = [];
-            appState.stays.push({ id: String(Date.now()), ...stayData, subItems: [] });
+            if (currentStayId) {
+                const index = appState.stays.findIndex(s => s.id == currentStayId);
+                if (index !== -1) appState.stays[index] = { ...appState.stays[index], ...stayData };
+            } else {
+                if(!appState.stays) appState.stays = [];
+                appState.stays.push({ id: String(Date.now()), ...stayData, subItems: [] });
+            }
         }
-    }
 
-    saveToFirebase();
-    closeEditModal();
+        saveToFirebase();
+        closeEditModal();
+    } catch (e) {
+        console.error("저장 중 오류 발생:", e);
+        alert("정보 저장에 실패했습니다. 다시 시도해 주세요.");
+    }
 }
 
 // --- Sub Itinerary Logic ---
@@ -336,7 +342,7 @@ async function updateExchangeRate() {
         rateEl.innerHTML = `100 JPY = <span style="color: var(--primary);">${(krwRate * 100).toFixed(2)}</span> KRW`;
         updateEl.innerText = `마지막 업데이트: ${new Date().toLocaleTimeString()}`;
     } catch (error) {
-        rateEl.innerText = '환율 정보 로드 실패';
+        if(rateEl) rateEl.innerText = '환율 정보 로드 실패';
     }
 }
 
@@ -344,7 +350,7 @@ async function updateExchangeRate() {
 
 function saveToFirebase() {
     set(tripRef, appState).catch(error => {
-        console.error("저장 실패:", error);
+        console.error("Firebase 저장 실패:", error);
         alert("데이터 저장에 실패했습니다. Firebase 보안 규칙을 확인해 주세요!");
     });
 }
@@ -354,6 +360,10 @@ function loadFromFirebase() {
         const data = snapshot.val();
         if (data) {
             appState = data;
+            // Ensure essential structures exist
+            if(!appState.stays) appState.stays = [];
+            if(!appState.flight) appState.flight = {};
+            if(!appState.rental) appState.rental = {};
             renderAll();
         } else {
             saveToFirebase();
