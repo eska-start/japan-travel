@@ -5,6 +5,7 @@ import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/
 const firebaseConfig = {
     apiKey: "AIzaSyCvPZsh-90NF_eXJQt_VJj0XfqeI9RsklE",
     authDomain: "travel-fbb26.firebaseapp.com",
+    databaseURL: "https://travel-fbb26-default-rtdb.firebaseio.com/",
     projectId: "travel-fbb26",
     storageBucket: "travel-fbb26.firebasestorage.app",
     messagingSenderId: "182068561482",
