@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Japan Odyssey - 일본 여행 플래너</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 사이드바 -->
+        <aside>
+            <div class="logo" style="font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-bottom: 3rem;">
+                <i class="fas fa-torii-gate"></i> JAPAN ODYSSEY
+            </div>
+            <nav>
+                <ul style="list-style: none;">
+                    <li style="margin-bottom: 1.5rem;"><a href="#" style="text-decoration: none; color: var(--text-main); font-weight: 600;"><i class="fas fa-home" style="margin-right: 10px;"></i> 대시보드</a></li>
+                    <li style="margin-bottom: 1.5rem;"><a href="#" style="text-decoration: none; color: var(--text-sub);"><i class="fas fa-plane" style="margin-right: 10px;"></i> 항공편</a></li>
+                    <li style="margin-bottom: 1.5rem;"><a href="#" style="text-decoration: none; color: var(--text-sub);"><i class="fas fa-hotel" style="margin-right: 10px;"></i> 숙소 & 렌트카</a></li>
+                    <li style="margin-bottom: 1.5rem;"><a href="#" style="text-decoration: none; color: var(--text-sub);"><i class="fas fa-calendar-alt" style="margin-right: 10px;"></i> 전체 일정</a></li>
+                    <li style="margin-bottom: 1.5rem;"><a href="#" style="text-decoration: none; color: var(--text-sub);"><i class="fas fa-wallet" style="margin-right: 10px;"></i> 예산 관리</a></li>
+                </ul>
+            </nav>
+            
+            <div class="currency-widget" style="margin-top: 4rem; background: var(--bg); padding: 1rem; border-radius: 12px;">
+                <p style="font-size: 0.8rem; color: var(--text-sub);">실시간 환율 (JPY/KRW)</p>
+                <p id="exchange-rate" style="font-weight: 700; margin-top: 5px;">로딩 중...</p>
+                <p id="last-update" style="font-size: 0.6rem; color: var(--text-sub); margin-top: 5px;"></p>
+            </div>
+        </aside>
+
+        <!-- 메인 콘텐츠 -->
+        <main>
+            <div class="header">
+                <div class="hero-banner">
+                    <div class="hero-content">
+                        <span class="tag" style="margin-bottom: 10px; display: inline-block;">TOKYO & KYOTO 2024</span>
+                        <h1>오사카 & 교토 힐링 여행</h1>
+                        <p><i class="far fa-calendar"></i> 2024.10.15 - 2024.10.22 (7박 8일)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 항공편 섹션 -->
+            <section id="flights">
+                <div class="flex-between" style="margin-bottom: 1.5rem;">
+                    <h2 class="section-title" style="margin-bottom: 0;"><i class="fas fa-plane-departure"></i> 항공편 정보</h2>
+                    <button class="btn-map" style="margin-top: 0; background: var(--text-sub);" onclick="openEditModal('flight')"><i class="fas fa-edit"></i> 수정</button>
+                </div>
+                <div id="flight-display" class="card flight-card">
+                    <!-- Dynamic Content -->
+                </div>
+            </section>
+
+            <!-- 렌트카 섹션 -->
+            <section id="rental">
+                <div class="flex-between" style="margin-bottom: 1.5rem;">
+                    <h2 class="section-title" style="margin-bottom: 0;"><i class="fas fa-car"></i> 렌트카 예약</h2>
+                    <button class="btn-map" style="margin-top: 0; background: var(--text-sub);" onclick="openEditModal('rental')"><i class="fas fa-edit"></i> 수정</button>
+                </div>
+                <div id="rental-display" class="card">
+                    <!-- Dynamic Content -->
+                </div>
+            </section>
+
+            <!-- 숙소 & 세부 일정 섹션 -->
+            <section id="accommodation">
+                <div class="flex-between" style="margin-bottom: 1.5rem;">
+                    <h2 class="section-title" style="margin-bottom: 0;"><i class="fas fa-hotel"></i> 숙소 관리</h2>
+                    <button class="btn-map" style="margin-top: 0;" onclick="openEditModal('stay')"><i class="fas fa-plus"></i> 숙소 추가</button>
+                </div>
+                
+                <div class="accommodation-container" id="stay-container">
+                    <!-- Dynamic Stays -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 모달 컨테이너 -->
+    <div id="editModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <h3 id="modalTitle" style="margin-bottom: 20px;">정보 수정</h3>
+            <div id="modalBody">
+                <!-- Dynamic Inputs -->
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-map" style="flex: 1; background: #eee; color: #333;" onclick="closeEditModal()">취소</button>
+                <button class="btn-map" style="flex: 1;" onclick="saveEdit()">저장하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 세부 일정 추가 모달 -->
+    <div id="addSubModal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px;">세부 일정 추가</h3>
+            <label class="label">시간</label>
+            <input type="time" id="itemTime">
+            <label class="label">활동 내용</label>
+            <input type="text" id="itemDesc" placeholder="예: 기요미즈데라 방문">
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-map" style="flex: 1; background: #eee; color: #333;" onclick="closeSubModal()">취소</button>
+                <button class="btn-map" style="flex: 1;" onclick="addItineraryItem()">추가하기</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
